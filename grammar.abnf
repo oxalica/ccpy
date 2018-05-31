@@ -1,0 +1,66 @@
+; A subset of Python 3 (https://docs.python.org/3/reference/grammar.html)
+; Note that codes with indentations are described as:
+; INDENT indented_codes... DEDENT
+
+NEWLINE = LF
+NAME = (ALPHA / "_") *(ALPHA / "_" / DIGIT)
+
+program = *stmt
+
+; Statements
+stmt = simple_stmt / compound_stmt
+simple_stmt = assign_stmt / augassign_stmt / expr_stmt
+            / del_stmt / pass_stmt
+            / flow_stmt / import_stmt
+assign_stmt = pat_list "=" *(pat_list "=") expr_list
+augassign_stmt = pat_list augassign expr_list
+augassign = "+=" / "-=" / "*=" / "/=" / "%="
+expr_stmt = expr_list
+del_stmt = "del" expr_list
+pass_stmt = "pass"
+flow_stmt = "break"
+          / "continue"
+          / "return" [expr_list]
+import_stmt = "import" dotted_as_names
+dotted_as_names = import_as_name *("," import_as_name) [","]
+import_as_name = NAME ["as" NAME]
+
+compound_stmt = if_stmt / while_stmt / for_stmt
+              / funcdef
+suite = simple_stmt / NEWLINE INDENT *stmt DEDENT
+if_stmt = "if" expr ":" suite *("elif" expr ":" suite) ["else" ":" suite]
+while_stmt = "while" expr ":" suite ["else" ":" suite]
+for_stmt = "for" pat_list "in" expr_list ":" suite ["else" ":" suite]
+funcdef = "def" NAME "(" [argdeflist] ")" ":" suite
+argdeflist = argdef *("," argdef)
+argdef = NAME ["=" expr]
+
+; Assignable expression
+pat_list = pat *("," pat) [","]
+pat = "(" pat_list ")"
+    / expr_atom "." NAME
+    / expr_atom "[" subscriptlist "]"
+
+; Expression
+expr_list = expr *("," expr) [","]
+expr = expr_test
+expr_test = expr_val ["if" expr_val "else" expr_val]
+expr_val = expr_term *(("+" / "-") expr_term)
+expr_term = expr_factor *(("*" / "/" / "%") expr_factor)
+expr_factor = ("+" / "-" / "~") expr_atom
+expr_atom = atom *trailer
+atom = "(" expr_list ")"
+     / "[" expr_list "]"
+     / "{" dict_kvs "}"
+     / NAME / NUMBER / STRING *STRING
+     / "..." / "None" / "True" / "False"
+trailer = "(" [arglist] ")"
+        / "[" subscriptlist "]"
+        / "." NAME
+subscriptlist = subscript *("," subscript) [","]
+subscript = expr / expr ":" expr [":" expr]
+
+arglist = pos_arg *("," pos_arg) *("," kv_arg) [","]
+        / kv_arg *("," kv_arg) [","]
+pos_arg = ["*"] expr
+kv_arg = NAME "=" expr / "**" expr
