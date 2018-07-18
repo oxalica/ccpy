@@ -1,4 +1,6 @@
 .vscode/
+debug/
+release/
 
 *.o
 *.exe
