@@ -1,0 +1,31 @@
+; A subset of Python 3 (https://docs.python.org/3/reference/grammar.html)
+; Note that codes with indentations are described as:
+; INDENT indented_codes... DEDENT
+
+NEWLINE = LF
+NAME = (ALPHA / "_") *(ALPHA / "_" / DIGIT)
+INTEGER = DIGIT *DIGIT ; In the range of `int64_t`
+NUMBER = INTEGER
+
+program = *stmt
+
+; Statements
+stmt = simple_stmt
+simple_stmt = expr_stmt / pass_stmt
+expr_stmt = expr_list
+pass_stmt = "pass"
+
+; Expression
+expr_list = expr *("," expr) [","]
+expr = expr_val
+expr_val = expr_term *(("+" / "-") expr_term)
+expr_term = expr_factor *(("*" / "/" / "%") expr_factor)
+expr_factor = ("+" / "-" / "~") expr_atom
+expr_atom = atom *trailer
+atom = "(" [expr_list] ")"
+     / NAME / NUMBER
+     / "..." / "None" / "True" / "False"
+trailer = "(" [arg_list] ")"
+        / "." NAME
+
+arg_list = expr *("," expr) [","]

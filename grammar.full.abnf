@@ -4,26 +4,23 @@
 
 NEWLINE = LF
 NAME = (ALPHA / "_") *(ALPHA / "_" / DIGIT)
+NUMBER = DIGIT *DIGIT
+STRING = DQUOTE *ANY DQUOTE
 
 program = *stmt
 
 ; Statements
 stmt = simple_stmt / compound_stmt
-simple_stmt = assign_stmt / augassign_stmt / expr_stmt
+simple_stmt = assign_stmt / expr_stmt
             / del_stmt / pass_stmt
-            / flow_stmt / import_stmt
+            / flow_stmt
 assign_stmt = pat_list "=" *(pat_list "=") expr_list
-augassign_stmt = pat_list augassign expr_list
-augassign = "+=" / "-=" / "*=" / "/=" / "%="
 expr_stmt = expr_list
-del_stmt = "del" expr_list
+del_stmt = "del" pat
 pass_stmt = "pass"
 flow_stmt = "break"
           / "continue"
           / "return" [expr_list]
-import_stmt = "import" dotted_as_names
-dotted_as_names = import_as_name *("," import_as_name) [","]
-import_as_name = NAME ["as" NAME]
 
 compound_stmt = if_stmt / while_stmt / for_stmt
               / funcdef
@@ -49,11 +46,13 @@ expr_val = expr_term *(("+" / "-") expr_term)
 expr_term = expr_factor *(("*" / "/" / "%") expr_factor)
 expr_factor = ("+" / "-" / "~") expr_atom
 expr_atom = atom *trailer
-atom = "(" expr_list ")"
-     / "[" expr_list "]"
-     / "{" dict_kvs "}"
+atom = "(" [expr_list] ")"
+     / "[" [expr_list] "]"
+     / "{" [dict_kvs] "}"
      / NAME / NUMBER / STRING *STRING
      / "..." / "None" / "True" / "False"
+dict_kvs = dict_kv *("," dict_kv) [","]
+dict_kv = expr ":" expr
 trailer = "(" [arglist] ")"
         / "[" subscriptlist "]"
         / "." NAME
