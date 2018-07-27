@@ -1,14 +1,38 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.5)
+cmake_minimum_required(VERSION 3.5)
 
-PROJECT(ccpy)
+project(ccpy)
 
-SET(CMAKE_CXX_COMPILER "g++")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -Werror")
+set(CMAKE_CXX_COMPILER "g++")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -Werror")
 
-FILE(GLOB_RECURSE SRC_LIST *.cc)
+file(GLOB_RECURSE SRC_LIST src/lccpy/*.cc)
 
-INCLUDE_DIRECTORIES(
+include_directories(
   src
 )
 
-ADD_EXECUTABLE(${PROJECT_NAME} ${SRC_LIST})
+add_library(lccpy STATIC ${SRC_LIST})
+
+add_executable(ccpy src/ccpy.cc)
+target_link_libraries(ccpy lccpy)
+
+# Tests
+set(TEST_LIST "")
+file(GLOB_RECURSE TEST_SOURCES tests/*.cc)
+foreach(TEST_PATH ${TEST_SOURCES})
+  get_filename_component(TEST_NAME ${TEST_PATH} NAME_WE)
+  file(GLOB_RECURSE TEST_CASES "tests/${TEST_NAME}/*.in")
+  set(TEST_LIST "${TEST_LIST}${TEST_NAME}\n")
+  foreach(CASE ${TEST_CASES})
+    set(TEST_LIST "${TEST_LIST}${CASE}\n")
+  endforeach()
+  set(TEST_LIST "${TEST_LIST}\n")
+
+  add_executable("test_${TEST_NAME}" ${TEST_PATH})
+  target_link_libraries("test_${TEST_NAME}" lccpy)
+endforeach()
+
+file(WRITE "${PROJECT_BINARY_DIR}/test_list.txt" ${TEST_LIST})
+
+add_executable(test src/test.cc)
+# target_link_libraries(test lccpy)
