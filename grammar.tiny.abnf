@@ -2,7 +2,7 @@
 ; Note that codes with indentations are described as:
 ; INDENT indented_codes... DEDENT
 
-NEWLINE = LF
+NEWLINE = "#" *. LF
 NAME = (ALPHA / "_") *(ALPHA / "_" / DIGIT)
 INTEGER = DIGIT *DIGIT ; In the range of `int64_t`
 NUMBER = INTEGER
@@ -24,7 +24,7 @@ expr_factor = ("+" / "-" / "~") expr_atom
 expr_atom = atom *trailer
 atom = "(" [expr_list] ")"
      / NAME / NUMBER
-     / "..." / "None" / "True" / "False"
+     / "..."
 trailer = "(" [arg_list] ")"
         / "." NAME
 
