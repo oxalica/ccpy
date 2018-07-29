@@ -1,5 +1,5 @@
-#ifndef __CCPY_SERIALIZE_Structual__
-#define __CCPY_SERIALIZE_Structual__
+#ifndef __CCPY_SERIALIZE_STRUCTUAL__
+#define __CCPY_SERIALIZE_STRUCTUAL__
 
 #include <optional>
 #include <variant>
@@ -55,4 +55,4 @@ private:
 
 } // namespace ccpy::serialize
 
-#endif // __CCPY_SERIALIZE_Structual__
+#endif // __CCPY_SERIALIZE_STRUCTUAL__
