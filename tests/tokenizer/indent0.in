@@ -1,0 +1,21 @@
+  begin
+
+a
+    b
+    c
+
+      d
+    e
+        # Empty lines should be skipped without counting its indentation
+      f
+# It should produce 2 `Dedent` and 1 `Indent` here
+  g
+  h
+
+  # f
+#
+
+a
+  b
+    # EOF may also produce indentations
+    c
