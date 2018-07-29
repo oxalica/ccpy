@@ -1,0 +1,11 @@
+Value
+Fn0()
+Fn1(e0)
+Fn2(e0, e1)
+Array0[]
+Array1[e0]
+Array2[e0, e1]
+Obj0 {}
+Obj1 { e0 }
+Obj2 { e0, e1 }
+BigStruct { value, f(hello, [1, 2], {}), (a, b) }
