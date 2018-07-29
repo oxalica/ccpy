@@ -2,7 +2,6 @@
 #define __CCPY_UTIL_STREAM__
 
 #include <exception>
-#include <iostream>
 #include <optional>
 #include <type_traits>
 #include <vector>
@@ -78,36 +77,6 @@ private:
   std::vector<value_type> buf;
 };
 
-/// Wrap `std::istream` to `IBufSource<char>`
-class WrapIStream: public IBufSource<char> {
-public:
-  explicit WrapIStream(std::istream &);
-  virtual ~WrapIStream() noexcept;
-
-  virtual std::optional<char> get();
-  DECL_OP_GET
-  virtual const std::optional<char> &peek();
-  virtual void putback(char &&);
-
-private:
-  struct Impl;
-  owned<Impl> pimpl;
-};
-
-/// Wrap `std::ostream` to `ISink<Str>`
-class WrapOStream: public ISink<Str> {
-public:
-  explicit WrapOStream(std::ostream &);
-  virtual ~WrapOStream() noexcept;
-
-  virtual void put(const Str &);
-  DECL_OP_PUT
-
-private:
-  struct Impl;
-  owned<Impl> pimpl;
-};
-
 class StreamFailException: public std::exception {
 public:
   StreamFailException(const char *) noexcept;
@@ -117,8 +86,6 @@ public:
 private:
   const char *reason;
 };
-
-using StreamFatalException = std::ios_base::failure;
 
 } // namespace ccpy
 

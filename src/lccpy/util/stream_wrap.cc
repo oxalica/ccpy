@@ -1,4 +1,4 @@
-#include "./stream.h"
+#include "./stream_wrap.h"
 #include <cstdlib>
 #include <iostream>
 #include <optional>

@@ -186,7 +186,7 @@ Tokenizer::Tokenizer(IBufSource<char> &_is)
   init_tables();
 }
 
-Tokenizer::~Tokenizer() {}
+Tokenizer::~Tokenizer() noexcept {}
 
 optional<Token> Tokenizer::get() {
   return this->pimpl->get();

@@ -12,7 +12,7 @@ namespace ccpy::parse {
 class Tokenizer: public ISource<ast::Token> {
 public:
   explicit Tokenizer(IBufSource<char> &);
-  virtual ~Tokenizer();
+  virtual ~Tokenizer() noexcept;
 
   virtual std::optional<ast::Token> get();
 

@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <variant>
 
@@ -49,6 +50,10 @@ public:
   ~owned() noexcept = default;
 
   const owned &operator=(const owned &) = delete;
+  const owned &operator=(owned &&rhs) {
+    this->ptr = std::move(rhs.ptr);
+    return *this;
+  }
   T &operator*() const noexcept { return *ptr.get(); }
   T *operator->() const noexcept { return ptr.get(); }
 
@@ -56,13 +61,18 @@ private:
   std::unique_ptr<T> ptr;
 };
 
+template<typename T>
+auto make_owned(T &&value) {
+  return owned<std::decay_t<T>>(std::forward<T>(value));
+}
+
 template<typename Variant, typename ...Fs>
-void match(Variant &&v, Fs ...fs) {
+auto match(Variant &&v, Fs ...fs) -> decltype(auto) {
   struct overloaded: public Fs... {
     using Fs::operator()...;
   };
 
-  std::visit(overloaded { fs... }, v);
+  return std::visit(overloaded { fs... }, std::forward<Variant>(v));
 }
 
 Str to_str(const Integer &x);

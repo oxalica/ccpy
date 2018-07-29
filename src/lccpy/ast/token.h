@@ -25,8 +25,9 @@ struct Span {
 DECL_REFL_ENUM(Keyword, KEYWORD_LIST);
 
 #define SYMBOL_LIST(F) \
+  F(Comma, ",") F(Colon, ":") F(SemiColon, ";") \
   F(Dot, ".") F(DotDotDot, "...") \
-  F(LParen, "F(") F(RParen, ")") \
+  F(LParen, "(") F(RParen, ")") \
   F(Not, "~") \
   F(Add, "+") F(Sub, "-") F(Mul, "*") F(Div, "/") F(Mod, "%")
 

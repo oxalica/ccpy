@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include <lccpy/util/stream.h>
+#include <lccpy/util/stream_wrap.h>
 #include <lccpy/serialize/token.h>
 using namespace ccpy;
 using namespace ccpy::serialize;
