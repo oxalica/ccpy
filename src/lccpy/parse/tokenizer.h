@@ -9,14 +9,12 @@
 
 namespace ccpy::parse {
 
-class Tokenizer: public IBufSource<ast::Token> {
+class Tokenizer: public ISource<ast::Token> {
 public:
   explicit Tokenizer(IBufSource<char> &);
   virtual ~Tokenizer();
 
-  virtual ast::Token get();
-  virtual const ast::Token &peek();
-  virtual void putback(ast::Token &&);
+  virtual std::optional<ast::Token> get();
 
 private:
   struct Impl;

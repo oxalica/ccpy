@@ -3,6 +3,7 @@
 
 #include <exception>
 #include <iostream>
+#include <optional>
 #include <type_traits>
 #include <vector>
 #include "./util.h"
@@ -15,13 +16,15 @@ public:
   using value_type = T;
 
   virtual ~ISource() noexcept {}
-  virtual T get() = 0;
+  /// `std::nullopt` for the end of stream.
+  virtual std::optional<T> get() = 0;
 };
 
 template<typename T>
 class IBufSource: public ISource<T> {
 public:
-  virtual const T &peek() = 0;
+  /// `std::nullopt` for the end of stream.
+  virtual const std::optional<T> &peek() = 0;
   virtual void putback(T &&) = 0;
   virtual void putback(const T &x) { this->putback(T(x)); }
 };
@@ -46,7 +49,7 @@ public:
   Buffered(const S &_upstream): upstream(_upstream), buf() {}
   virtual ~Buffered() noexcept {}
 
-  virtual T get() {
+  virtual std::optional<T> get() {
     if(this->buf.empty())
       return this->upstream->get();
     else {
@@ -56,9 +59,13 @@ public:
     }
   }
 
-  virtual const T &peek() {
-    if(this->buf.empty())
-      this->buf.push_back(this->upstream.get());
+  virtual std::optional<const T &> peek() {
+    if(this->buf.empty()) {
+      if(auto x = this->upstream.get())
+        this->buf.push_back(move(x));
+      else
+        return {};
+    }
     return this->buf.back();
   }
 
@@ -77,9 +84,9 @@ public:
   explicit WrapIStream(std::istream &);
   virtual ~WrapIStream() noexcept;
 
-  virtual char get();
+  virtual std::optional<char> get();
   DECL_OP_GET
-  virtual const char &peek();
+  virtual const std::optional<char> &peek();
   virtual void putback(char &&);
 
 private:
@@ -99,11 +106,6 @@ public:
 private:
   struct Impl;
   owned<Impl> pimpl;
-};
-
-class StreamEndException: public std::exception {
-public:
-  virtual const char *what() const noexcept;
 };
 
 class StreamFailException: public std::exception {

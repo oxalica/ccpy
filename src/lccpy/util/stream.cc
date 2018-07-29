@@ -1,53 +1,57 @@
 #include "./stream.h"
 #include <cstdlib>
 #include <iostream>
+#include <optional>
 #include "./util.h"
 using namespace std;
 
 namespace ccpy {
 
-namespace {
-
-void trans_exception(istream &s) {
-  if(s.eof())
-    throw StreamEndException {};
-  s.exceptions(ios_base::failbit);
-}
-
-} // namespace anonymouse
-
 struct WrapIStream::Impl {
   istream &s;
-  char buf;
+  optional<char> buf;
 
-  char get() {
-    char c;
-    this->s.get(c);
-    return c;
+  void trans_exception() {
+    this->s.exceptions(ios_base::badbit);
   }
 
-  const char &peek() {
+  optional<char> get() {
+    char c;
+    if(this->s.get(c))
+      return c;
+    this->trans_exception();
+    this->s.clear();
+    return {};
+  }
+
+  const optional<char> &peek() {
     int c = this->s.peek();
-    trans_exception(this->s);
-    return this->buf = static_cast<char>(c);
+    this->trans_exception();
+    if(c != istream::traits_type::eof())
+      this->buf = static_cast<char>(c);
+    else {
+      this->buf = {}; // Stream end
+      this->s.clear();
+    }
+    return this->buf;
   }
 
   void putback(char c) {
     this->s.putback(c);
-    trans_exception(this->s);
+    this->trans_exception();
   }
 };
 
 WrapIStream::WrapIStream(istream &s)
-  : pimpl(Impl { s, '\0' }) {}
+  : pimpl(Impl { s, {} }) {}
 
 WrapIStream::~WrapIStream() noexcept {}
 
-char WrapIStream::get() {
+optional<char> WrapIStream::get() {
   return this->pimpl->get();
 }
 
-const char &WrapIStream::peek() {
+const optional<char> &WrapIStream::peek() {
   return this->pimpl->peek();
 }
 
@@ -66,10 +70,6 @@ WrapOStream::~WrapOStream() noexcept {}
 
 void WrapOStream::put(const Str &c) {
   this->pimpl->s.write(c.data(), c.length());
-}
-
-const char *StreamEndException::what() const noexcept {
-  return "Stream End";
 }
 
 StreamFailException::StreamFailException(const char *_reason) noexcept
