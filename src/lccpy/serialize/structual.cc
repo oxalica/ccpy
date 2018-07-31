@@ -1,19 +1,22 @@
 #include "./structual.h"
-#include <stdexcept>
+#include <sstream>
 #include "../util/util.h"
+#include "../util/stream.h"
+#include "../util/stream_wrap.h"
 using namespace std;
 
 namespace ccpy::serialize {
 
-struct StructualSerializer::Impl {
-  IBaseSerializer &is;
-  bool pretty;
+namespace {
+
+struct Impl {
+  ISink<Str> &o;
 
   DECL_OP_PUT
 
   template<typename T>
   void put(const T &x) {
-    this->is.put(x);
+    this->o.put(x);
   }
 
   void put(const Structual &x) {
@@ -58,18 +61,13 @@ struct StructualSerializer::Impl {
   }
 };
 
-StructualSerializer::StructualSerializer(
-  IBaseSerializer &is,
-  bool pretty
-) : pimpl(Impl { is, pretty }) {
-  if(pretty)
-    throw invalid_argument { "TODO: Not implemented" };
-}
+} // namespace anonymouse
 
-StructualSerializer::~StructualSerializer() noexcept {}
-
-void StructualSerializer::put(const Structual &x) {
-  this->pimpl->put(x);
+Str StructualSerializer::operator()(const Structual &x) const {
+  ostringstream ss {};
+  WrapOStream sink { ss };
+  Impl { sink }.put(x);
+  return ss.str();
 }
 
 } // namespace ccpy::serialize

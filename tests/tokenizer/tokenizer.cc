@@ -12,14 +12,12 @@ int main() {
   auto iconsole = WrapIStream { cin };
   auto tok = Tokenizer { iconsole };
   auto oconsole = WrapOStream { cout };
-  auto base_ser = StructualSerializer { oconsole };
-  auto ser = TokenTreeSerializer { base_ser };
+  auto structual_ser = StructualSerializer {};
+  auto token_ser = TokenTreeSerializer {};
 
   try {
-    while(auto c = tok.get()) {
-      ser.put(*c);
-      oconsole << "\n";
-    }
+    while(auto c = tok.get())
+      oconsole << structual_ser(token_ser(*c)) << "\n";
     oconsole << "End\n";
   } catch(StreamFailException e) {
     oconsole << "Fail: " << e.what() << "\n";

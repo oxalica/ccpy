@@ -6,11 +6,16 @@
 
 namespace ccpy::serialize {
 
-template<typename T>
-using ISerializer = ISink<T>;
+/// Serializer transforming T to low-level type U.
+template<typename T, typename U>
+class ISerializer {
+public:
+  virtual ~ISerializer() noexcept {}
 
-using IBaseSerializer = ISerializer<Str>;
+  /// Should be pure
+  virtual U operator()(const T &) const = 0;
+};
 
-} // namespace ccpy::print
+} // namespace ccpy::serialize
 
 #endif // __CCPY_SERIALIZE_SERIALIZER__

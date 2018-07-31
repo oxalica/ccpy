@@ -5,7 +5,6 @@
 #include <variant>
 #include <vector>
 #include "./serializer.h"
-#include "../util/util.h"
 
 namespace ccpy::serialize {
 
@@ -40,17 +39,12 @@ struct StructBrace {
   std::vector<Structual> inner;
 };
 
-class StructualSerializer: public ISerializer<Structual> {
+class StructualSerializer: public ISerializer<Structual, Str> {
 public:
-  explicit StructualSerializer(IBaseSerializer &, bool pretty = false);
-  virtual ~StructualSerializer() noexcept;
+  StructualSerializer() {}
+  virtual ~StructualSerializer() noexcept {}
 
-  virtual void put(const Structual &);
-  DECL_OP_PUT
-
-private:
-  struct Impl;
-  owned<Impl> pimpl;
+  virtual Str operator()(const Structual &) const;
 };
 
 } // namespace ccpy::serialize

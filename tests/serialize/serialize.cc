@@ -1,15 +1,13 @@
 #include <iostream>
 #include <fstream>
 #include <lccpy/util/stream_wrap.h>
+#include <lccpy/serialize/structual.h>
 #include <lccpy/serialize/token.h>
 using namespace ccpy;
 using namespace ccpy::serialize;
 using namespace std;
 
 int main() {
-  auto oconsole = WrapOStream { cout };
-  auto ser = StructualSerializer { oconsole };
-
   vector<Structual> v = {
     StructValue { "Value" },
     StructParen { "Fn0", {} },
@@ -44,10 +42,10 @@ int main() {
     }
   };
 
-  for(auto &c: v) {
-    ser << c;
-    oconsole << "\n";
-  }
+  auto oconsole = WrapOStream { cout };
+  auto structual_ser = StructualSerializer {};
+  for(auto &c: v)
+    oconsole << structual_ser(c) << "\n";
 
   return 0;
 }

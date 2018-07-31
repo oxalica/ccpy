@@ -3,20 +3,15 @@
 
 #include "./structual.h"
 #include "../ast/token.h"
-#include "../util/util.h"
 
 namespace ccpy::serialize {
 
-class TokenTreeSerializer: public ISerializer<ast::Token> {
+class TokenTreeSerializer: public ISerializer<ast::Token, Structual> {
 public:
-  TokenTreeSerializer(StructualSerializer &);
-  virtual ~TokenTreeSerializer() noexcept;
+  TokenTreeSerializer() {}
+  virtual ~TokenTreeSerializer() noexcept {}
 
-  virtual void put(const ast::Token &);
-
-private:
-  struct Impl;
-  owned<Impl> pimpl;
+  virtual Structual operator()(const ast::Token &) const;
 };
 
 } // namespace ccpy
