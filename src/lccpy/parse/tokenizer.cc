@@ -3,15 +3,12 @@
 #include <cctype>
 #include <deque>
 #include <limits>
-#include <memory>
-#include <optional>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 #include "../ast/token.h"
-#include "../util/util.h"
 #include "../util/stream.h"
 using namespace ccpy::ast;
 using namespace std;

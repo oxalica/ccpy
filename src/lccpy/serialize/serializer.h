@@ -2,7 +2,6 @@
 #define __CCPY_SERIALIZE_SERIALIZER__
 
 #include "../util/stream.h"
-#include "../util/util.h"
 
 namespace ccpy::serialize {
 

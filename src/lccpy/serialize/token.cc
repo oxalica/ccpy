@@ -1,8 +1,9 @@
 #include "./token.h"
-#include <optional>
 #include <utility>
 #include "./structual.h"
-#include "../util/util.h"
+#include "./number.h"
+#include "../util/adt.h"
+#include "../util/types.h"
 using namespace std;
 using namespace ccpy::ast;
 
@@ -31,7 +32,7 @@ Structual trans(const Token &tok) {
       return parened("Name", tok.name);
     },
     [&](const TokInteger &tok) {
-      return parened("Integer", to_str(tok.integer));
+      return parened("Integer", IntegerSerializer {}(tok.integer));
     },
     [&](const TokIndent &) {
       return Structual { StructValue { "Indent" } };

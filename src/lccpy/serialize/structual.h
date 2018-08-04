@@ -1,10 +1,10 @@
 #ifndef __CCPY_SERIALIZE_STRUCTUAL__
 #define __CCPY_SERIALIZE_STRUCTUAL__
 
-#include <optional>
-#include <variant>
 #include <vector>
 #include "./serializer.h"
+#include "../util/adt.h"
+#include "../util/types.h"
 
 namespace ccpy::serialize {
 
@@ -13,7 +13,7 @@ struct StructParen;
 struct StructBracket;
 struct StructBrace;
 
-using Structual = std::variant<
+using Structual = tagged_union<
   StructValue,
   StructParen,
   StructBracket,
@@ -25,17 +25,17 @@ struct StructValue {
 };
 
 struct StructParen {
-  std::optional<Str> name;
+  optional<Str> name;
   std::vector<Structual> inner;
 };
 
 struct StructBracket {
-  std::optional<Str> name;
+  optional<Str> name;
   std::vector<Structual> inner;
 };
 
 struct StructBrace {
-  std::optional<Str> name;
+  optional<Str> name;
   std::vector<Structual> inner;
 };
 

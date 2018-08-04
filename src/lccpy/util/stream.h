@@ -2,10 +2,11 @@
 #define __CCPY_UTIL_STREAM__
 
 #include <exception>
-#include <optional>
 #include <type_traits>
 #include <vector>
-#include "./util.h"
+#include "./adt.h"
+#include "./macro.h"
+#include "./types.h"
 
 namespace ccpy {
 
@@ -16,14 +17,14 @@ public:
 
   virtual ~ISource() noexcept {}
   /// `std::nullopt` for the end of stream.
-  virtual std::optional<T> get() = 0;
+  virtual optional<T> get() = 0;
 };
 
 template<typename T>
 class IBufSource: public ISource<T> {
 public:
   /// `std::nullopt` for the end of stream.
-  virtual const std::optional<T> &peek() = 0;
+  virtual const optional<T> &peek() = 0;
   virtual void putback(T &&) = 0;
   virtual void putback(const T &x) { this->putback(T(x)); }
 };
@@ -48,7 +49,7 @@ public:
   Buffered(const S &_upstream): upstream(_upstream), buf() {}
   virtual ~Buffered() noexcept {}
 
-  virtual std::optional<T> get() {
+  virtual optional<T> get() {
     if(this->buf.empty())
       return this->upstream->get();
     else {
@@ -58,7 +59,7 @@ public:
     }
   }
 
-  virtual std::optional<const T &> peek() {
+  virtual optional<const T &> peek() {
     if(this->buf.empty()) {
       if(auto x = this->upstream.get())
         this->buf.push_back(move(x));

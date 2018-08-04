@@ -1,11 +1,11 @@
 #ifndef __CCPY_PARSE_PARSER__
 #define __CCPY_PARSE_PARSER__
 
-#include <optional>
 #include "../ast/token.h"
 #include "../ast/stmt.h"
+#include "../util/adt.h"
+#include "../util/memory.h"
 #include "../util/stream.h"
-#include "../util/util.h"
 
 namespace ccpy::parse {
 
@@ -14,7 +14,7 @@ public:
   explicit Parser(IBufSource<ast::Token> &);
   virtual ~Parser() noexcept;
 
-  virtual std::optional<ast::Stmt> get();
+  virtual optional<ast::Stmt> get();
 
 private:
   struct Impl;

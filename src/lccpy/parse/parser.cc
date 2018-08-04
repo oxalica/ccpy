@@ -1,6 +1,7 @@
 #include "./parser.h"
-#include <optional>
 #include <utility>
+#include "../ast/expr.h"
+#include "../util/adt.h"
 using namespace std;
 using namespace ccpy::ast;
 
@@ -104,8 +105,8 @@ struct Parser::Impl {
         break;
 
       this->is.get();
-      auto lexpr = make_owned(move(ret));
-      auto rexpr = make_owned(this->get_expr_term());
+      auto lexpr = to_owned(move(ret));
+      auto rexpr = to_owned(this->get_expr_term());
       ret = Expr { ExprBinary { *op, move(lexpr), move(rexpr) } };
     }
     return ret;
@@ -126,8 +127,8 @@ struct Parser::Impl {
         break;
 
       this->is.get();
-      auto lexpr = make_owned(move(ret));
-      auto rexpr = make_owned(this->get_expr_term());
+      auto lexpr = to_owned(move(ret));
+      auto rexpr = to_owned(this->get_expr_term());
       ret = Expr { ExprBinary { *op, move(lexpr), move(rexpr) } };
     }
     return ret;
@@ -150,7 +151,7 @@ struct Parser::Impl {
       return this->get_expr_atom();
 
     this->is.get();
-    auto expr = make_owned(this->get_expr_factor()); // Recur
+    auto expr = to_owned(this->get_expr_factor()); // Recur
     return ExprUnary { *op, move(expr) };
   }
 
@@ -162,7 +163,7 @@ struct Parser::Impl {
         // Function call
         this->is.get();
         auto args = this->get_expr_list().first;
-        auto fn = make_owned(move(ret));
+        auto fn = to_owned(move(ret));
         ret = Expr { ExprCall { move(fn), move(args) } };
       } else if(is_symbol(tok, Symbol::Dot)) {
         // Member access
@@ -173,7 +174,7 @@ struct Parser::Impl {
         match(move(*member), [&](auto &&tok) {
           using T = decay_t<decltype(tok)>;
           if constexpr(is_same_v<T, TokName>) {
-            auto obj = make_owned(move(ret));
+            auto obj = to_owned(move(ret));
             ret = Expr { ExprMember { move(obj), move(tok.name) } };
           } else
             throw StreamFailException { "Expect member name" };

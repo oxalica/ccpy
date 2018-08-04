@@ -4,8 +4,9 @@
 #include <cstdlib>
 #include <vector>
 #include "../ast/token.h"
+#include "../util/adt.h"
+#include "../util/memory.h"
 #include "../util/stream.h"
-#include "../util/util.h"
 
 namespace ccpy::parse {
 
@@ -14,7 +15,7 @@ public:
   explicit Tokenizer(IBufSource<char> &);
   virtual ~Tokenizer() noexcept;
 
-  virtual std::optional<ast::Token> get();
+  virtual optional<ast::Token> get();
 
 private:
   struct Impl;

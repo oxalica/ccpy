@@ -1,6 +1,6 @@
 #include "./structual.h"
 #include <sstream>
-#include "../util/util.h"
+#include "../util/adt.h"
 #include "../util/stream.h"
 #include "../util/stream_wrap.h"
 using namespace std;

@@ -1,9 +1,9 @@
 #ifndef __CCPY_AST_STMT__
 #define __CCPY_AST_STMT__
 
-#include <variant>
 #include <vector>
 #include "./expr.h"
+#include "../util/adt.h"
 
 namespace ccpy::ast {
 
@@ -13,7 +13,7 @@ struct StmtExpr {
   Expr expr;
 };
 
-using Stmt = std::variant<
+using Stmt = tagged_union<
   StmtPass,
   StmtExpr
 >;

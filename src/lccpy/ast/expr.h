@@ -1,9 +1,11 @@
 #ifndef __CCPY_AST_EXPR__
 #define __CCPY_AST_EXPR__
 
-#include <variant>
 #include <vector>
-#include "../util/util.h"
+#include "../util/adt.h"
+#include "../util/macro.h"
+#include "../util/memory.h"
+#include "../util/types.h"
 
 namespace ccpy::ast {
 
@@ -17,7 +19,7 @@ struct LitBool {
 
 struct LitEllipse {}; // `...`
 
-using Literal = std::variant<
+using Literal = tagged_union<
   LitInteger,
   LitBool,
   LitEllipse
@@ -39,7 +41,7 @@ struct ExprTuple;
 struct ExprUnary;
 struct ExprBinary;
 
-using Expr = std::variant<
+using Expr = tagged_union<
   ExprName,
   ExprLiteral,
   ExprMember,

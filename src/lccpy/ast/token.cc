@@ -1,5 +1,5 @@
 #include "./token.h"
-#include "../util/util.h"
+#include "../util/macro.h"
 
 namespace ccpy::ast {
 

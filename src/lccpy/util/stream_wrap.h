@@ -3,9 +3,10 @@
 
 #include <algorithm>
 #include <iostream>
-#include <optional>
 #include <vector>
 #include "./stream.h"
+#include "../util/adt.h"
+#include "../util/memory.h"
 
 namespace ccpy {
 
@@ -15,9 +16,9 @@ public:
   explicit WrapIStream(std::istream &);
   virtual ~WrapIStream() noexcept;
 
-  virtual std::optional<char> get();
+  virtual optional<char> get();
   DECL_OP_GET
-  virtual const std::optional<char> &peek();
+  virtual const optional<char> &peek();
   virtual void putback(char &&);
 
 private:
@@ -50,14 +51,14 @@ public:
   }
   virtual ~WrapIData() noexcept {}
 
-  virtual std::optional<T> get() {
+  virtual optional<T> get() {
     this->peek();
     auto x = move(this->head);
     this->head = {};
     return move(x);
   }
   DECL_OP_GET
-  virtual const std::optional<T> &peek() {
+  virtual const optional<T> &peek() {
     if(!this->head && !this->tail.empty()) {
       this->head = move(this->tail.back());
       this->tail.pop_back();
@@ -69,7 +70,7 @@ public:
   }
 
 private:
-  std::optional<T> head;
+  optional<T> head;
   std::vector<T> tail;
 };
 

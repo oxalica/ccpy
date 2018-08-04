@@ -1,8 +1,8 @@
 #include "./stream_wrap.h"
 #include <cstdlib>
 #include <iostream>
-#include <optional>
-#include "./util.h"
+#include "./stream.h"
+#include "../util/types.h"
 using namespace std;
 
 namespace ccpy {

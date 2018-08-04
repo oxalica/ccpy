@@ -1,13 +1,14 @@
 #ifndef __CCPY_AST_TOKEN__
 #define __CCPY_AST_TOKEN__
 
-#include <variant>
-#include "../util/util.h"
+#include "../util/adt.h"
+#include "../util/macro.h"
+#include "../util/types.h"
 
 namespace ccpy::ast {
 
 struct Span {
-  SourcePos begin, end;
+  StrPos begin, end;
 };
 
 #define KEYWORD_LIST(F) \
@@ -40,7 +41,7 @@ struct TokInteger { Integer integer; };
 struct TokIndent  {};
 struct TokDedent  {};
 
-using Token = std::variant<
+using Token = tagged_union<
   TokKeyword,
   TokSymbol,
   TokName,
