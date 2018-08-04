@@ -19,7 +19,7 @@ Structual parened(Str name, Str value) {
 }
 
 Structual trans(const Token &tok) {
-  return match(tok,
+  return match<Structual>(tok,
     [&](const TokKeyword &tok) {
       auto kw = KeywordMap[static_cast<size_t>(tok.keyword)];
       return parened("Keyword", kw);

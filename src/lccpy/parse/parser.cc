@@ -14,27 +14,26 @@ using OptTok = optional<Token>;
 bool is_expr_begin(const OptTok &tok) {
   if(!tok)
     return false;
-  return match(*tok, [](const auto &tok) -> bool {
-    using T = decay_t<decltype(tok)>;
-    if constexpr(is_same_v<T, TokSymbol>)
-      switch(tok.symbol) {
-        case Symbol::DotDotDot: // `...`
-        case Symbol::Not: case Symbol::Add: case Symbol::Sub: // Unary op
-          return true;
-        default:
-          return false;
-      }
-    else if constexpr(is_same_v<T, TokName> || is_same_v<T, TokInteger>)
-      return true;
-    else
-      return false;
-  });
+  return match<bool>(*tok
+  , [](const TokName &) { return true; }
+  , [](const TokInteger &) { return true; }
+  , [](const TokSymbol &tok) {
+    switch(tok.symbol) {
+      case Symbol::DotDotDot: // `...`
+      case Symbol::Not: case Symbol::Add: case Symbol::Sub: // Unary op
+        return true;
+      default:
+        return false;
+    }
+  }
+  , [](auto &) { return false; }
+  );
 }
 
 bool is_symbol(const OptTok &tok, Symbol sym) {
   if(!tok)
     return false;
-  return match(*tok,
+  return match<bool>(*tok,
     [=](const TokSymbol &tok) { return tok.symbol == sym; },
     [](auto &) { return false; }
   );
@@ -49,23 +48,23 @@ struct Parser::Impl {
     auto &nxt = this->is.peek();
     if(!nxt)
       return {};
-    return match(*nxt, [&](const auto &tok) -> Stmt {
-      using T = decay_t<decltype(tok)>;
-      if constexpr(is_same_v<T, TokKeyword>)
-        switch(tok.keyword) {
-          case Keyword::Pass:
-            return StmtPass {};
-          default:
-            throw StreamFailException { "Unexcepted keyword" };
-        }
-      else {
-        auto ret = this->get_expr_list();
-        auto expr = ret.first.size() == 1 && !ret.second
-          ? move(ret.first.front())
-          : ExprTuple { move(ret.first) };
-        return StmtExpr { move(expr) };
+    return match<Stmt>(*nxt
+    , [](const TokKeyword &tok) {
+      switch(tok.keyword) {
+        case Keyword::Pass:
+          return StmtPass {};
+        default:
+          throw StreamFailException { "Unexcepted keyword" };
       }
-    });
+    }
+    , [&](auto &) {
+      auto ret = this->get_expr_list();
+      auto expr = ret.first.size() == 1 && !ret.second
+        ? move(ret.first.front())
+        : ExprTuple { move(ret.first) };
+      return StmtExpr { move(expr) };
+    }
+    );
   }
 
   /// Return (expressions, whether_has_tailing_comma)
@@ -171,14 +170,15 @@ struct Parser::Impl {
         auto member = this->is.get();
         if(!member)
           throw StreamFailException { "Expect member name, found EOF" };
-        match(move(*member), [&](auto &&tok) {
-          using T = decay_t<decltype(tok)>;
-          if constexpr(is_same_v<T, TokName>) {
-            auto obj = to_owned(move(ret));
-            ret = Expr { ExprMember { move(obj), move(tok.name) } };
-          } else
-            throw StreamFailException { "Expect member name" };
-        });
+        match(move(*member)
+        , [&](TokName &&tok) {
+          auto obj = to_owned(move(ret));
+          ret = Expr { ExprMember { move(obj), move(tok.name) } };
+        }
+        , [](auto &&) {
+          throw StreamFailException { "Expect member name" };
+        }
+        );
       } else
         break;
     }
@@ -186,28 +186,31 @@ struct Parser::Impl {
   }
 
   Expr get_atom() {
-    return match(move(*this->is.get()), [&](auto &&tok) -> Expr {
-      using T = decay_t<decltype(tok)>;
-      if constexpr(is_same_v<T, TokSymbol>)
-        switch(tok.symbol) {
-          case Symbol::DotDotDot:
-            return ExprLiteral { LitEllipse {} };
-          case Symbol::LParen: {
-            auto ret = this->get_expr_list();
-            return ret.first.size() == 1 && !ret.second
-              ? move(ret.first.front())
-              : ExprTuple { move(ret.first) };
-          }
-          default:
-            throw StreamFailException { "Unexpected symbol for atom" };
+    return match<Expr>(*this->is.get()
+    , [&](TokSymbol &&tok) -> Expr {
+      switch(tok.symbol) {
+        case Symbol::DotDotDot:
+          return ExprLiteral { LitEllipse {} };
+        case Symbol::LParen: {
+          auto ret = this->get_expr_list();
+          return ret.first.size() == 1 && !ret.second
+            ? move(ret.first.front())
+            : ExprTuple { move(ret.first) };
         }
-      else if constexpr(is_same_v<T, TokName>)
-        return ExprName { move(tok.name) };
-      else if constexpr(is_same_v<T, TokInteger>)
-        return ExprLiteral { LitInteger { move(tok.integer) } };
-      else
-        throw StreamFailException { "Unexpected token for atom" };
-    });
+        default:
+          throw StreamFailException { "Unexpected symbol for atom" };
+      }
+    }
+    , [](TokName &&tok) {
+      return ExprName { move(tok.name) };
+    }
+    , [](TokInteger &&tok) {
+      return ExprLiteral { LitInteger { move(tok.integer) } };
+    }
+    , [](auto &&) -> Expr { // never
+      throw StreamFailException { "Unexpected token for atom" };
+    }
+    );
   }
 };
 
