@@ -6,7 +6,7 @@
 
 namespace ccpy::serialize {
 
-class IntegerSerializer: ISerializer<Integer, Str> {
+class IntegerSerializer: public ISerializer<Integer, Str> {
 public:
   IntegerSerializer() {}
   virtual ~IntegerSerializer() noexcept {}
@@ -14,7 +14,7 @@ public:
   Str operator()(const Integer &) const;
 };
 
-class DecimalSerializer: ISerializer<Decimal, Str> {
+class DecimalSerializer: public ISerializer<Decimal, Str> {
 public:
   DecimalSerializer() {}
   virtual ~DecimalSerializer() noexcept {}
