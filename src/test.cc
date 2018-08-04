@@ -16,6 +16,17 @@ struct Test {
   vector<string> tests;
 };
 
+string get_filename(const string &path) {
+  auto sep = path.find_last_of("/\\");
+  assert(sep != string::npos);
+  return path.substr(sep + 1);
+}
+
+string get_bare_filename(const string &path) {
+  auto name = get_filename(path);
+  return name.substr(0, name.rfind('.'));
+}
+
 vector<Test> load_tests() {
   ifstream fin(TEST_LIST_PATH);
   vector<Test> ret {};
@@ -73,17 +84,15 @@ bool run(const vector<Test> &tests) {
   cout << "Total " << tests.size() << " tests." << endl;
   size_t cnt = 0;
   for(auto &test: tests) {
-    cout << "Testing " << test.name
-         << " (" << ++cnt << "/" << tests.size() <<  ")" << endl;
+    cout << "[" << ++cnt << "/" << tests.size() <<  "]"
+         << " Testing " << test.name
+         << " ( " << test.tests.size() << " samples )" << endl;
     for(auto &path: test.tests) {
       string opath { path };
       opath.erase(end(opath) - 3, end(opath)); // Remove `.in`
       opath += ".out";
 
-      auto name_pos = min(opath.rfind('/'), opath.rfind('\\'));
-      assert(name_pos != string::npos);
-
-      cout << path.substr(name_pos) << ": " << flush;
+      cout << "  " << get_bare_filename(path) << ": " << flush;
       if(run_one(test.name, path, opath))
         cout << " OK" << endl;
       else {
@@ -117,5 +126,7 @@ int main(int argc, char *argv[]) {
     }
   }
 
-  return run(run_tests) ? 0 : 1;
+  return run(run_tests)
+    ? EXIT_SUCCESS
+    : EXIT_FAILURE;
 }
