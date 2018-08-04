@@ -14,6 +14,8 @@ public:
   template<typename ...Args>
   explicit owned(Args &&...args)
     : ptr(std::make_unique<T>(std::forward<Args>(args)...)) {}
+  template<typename U = T>
+  owned(U &&value): ptr(std::make_unique<T>(std::forward<U>(value))) {}
   owned(owned &&) noexcept = default;
   ~owned() noexcept = default;
 

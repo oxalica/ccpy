@@ -104,9 +104,7 @@ struct Parser::Impl {
         break;
 
       this->is.get();
-      auto lexpr = to_owned(move(ret));
-      auto rexpr = to_owned(this->get_expr_term());
-      ret = Expr { ExprBinary { op, move(lexpr), move(rexpr) } };
+      ret = ExprBinary { op, move(ret), this->get_expr_term() };
     }
     return ret;
   }
@@ -126,9 +124,7 @@ struct Parser::Impl {
         break;
 
       this->is.get();
-      auto lexpr = to_owned(move(ret));
-      auto rexpr = to_owned(this->get_expr_term());
-      ret = Expr { ExprBinary { op, move(lexpr), move(rexpr) } };
+      ret = ExprBinary { op, move(ret), this->get_expr_factor() };
     }
     return ret;
   }
@@ -149,8 +145,7 @@ struct Parser::Impl {
       return this->get_expr_atom();
 
     this->is.get();
-    auto expr = to_owned(this->get_expr_factor()); // Recur
-    return ExprUnary { op, move(expr) };
+    return ExprUnary { op, this->get_expr_factor() }; // Recur
   }
 
   Expr get_expr_atom() {
@@ -160,9 +155,7 @@ struct Parser::Impl {
       if(is_symbol(tok, Symbol::LParen)) {
         // Function call
         this->is.get();
-        auto args = this->get_expr_list().first;
-        auto fn = to_owned(move(ret));
-        ret = Expr { ExprCall { move(fn), move(args) } };
+        ret = ExprCall { move(ret), this->get_expr_list().first };
       } else if(is_symbol(tok, Symbol::Dot)) {
         // Member access
         this->is.get();
@@ -171,8 +164,7 @@ struct Parser::Impl {
           throw StreamFailException { "Expect member name, found EOF" };
         match(move(*member)
         , [&](TokName &&tok) {
-          auto obj = to_owned(move(ret));
-          ret = Expr { ExprMember { move(obj), move(tok.name) } };
+          ret = ExprMember { move(ret), move(tok.name) };
         }
         , [](auto &&) {
           throw StreamFailException { "Expect member name" };
