@@ -36,7 +36,7 @@ R match_impl(U &&u, Fs ...arms) {
       overloaded dispatcher { arms... };
       return std::visit([&](auto &&var) -> R {
         return dispatcher(std::forward<decltype(var)>(var));
-      }, u);
+      }, std::forward<U>(u));
     }
   }
 }

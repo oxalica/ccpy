@@ -1,0 +1,8 @@
+StmtExpr(ExprName("a"))
+StmtExpr(ExprBinary("+", ExprBinary("+", ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2))), ExprLiteral(LitInteger(3))))
+StmtExpr(ExprBinary("+", ExprLiteral(LitInteger(1)), ExprBinary("*", ExprLiteral(LitInteger(2)), ExprUnary("~", ExprUnary("~", ExprLiteral(LitInteger(3)))))))
+StmtExpr(ExprBinary("+", ExprName("a"), ExprBinary("%", ExprLiteral(LitInteger(1)), ExprLiteral(LitEllipse))))
+StmtExpr(ExprTuple(ExprLiteral(LitInteger(1))))
+StmtPass
+StmtExpr(ExprTuple(ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2)), ExprLiteral(LitInteger(3))))
+End

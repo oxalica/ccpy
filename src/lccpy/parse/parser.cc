@@ -49,9 +49,10 @@ struct Parser::Impl {
     if(!nxt)
       return {};
     return match<Stmt>(*nxt
-    , [](const TokKeyword &tok) {
+    , [&](const TokKeyword &tok) {
       switch(tok.keyword) {
         case Keyword::Pass:
+          this->is.get();
           return StmtPass {};
         default:
           throw StreamFailException { "Unexcepted keyword" };
@@ -177,7 +178,7 @@ struct Parser::Impl {
   }
 
   Expr get_atom() {
-    return match<Expr>(*this->is.get()
+    return match<Expr>(*this->is.get() // Must not EOF. Checked as expr begin
     , [&](TokSymbol &&tok) -> Expr {
       switch(tok.symbol) {
         case Symbol::DotDotDot:
