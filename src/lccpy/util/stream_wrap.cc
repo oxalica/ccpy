@@ -24,7 +24,7 @@ struct WrapIStream::Impl {
     return {};
   }
 
-  const optional<const char &> peek() {
+  optional<const char &> peek() {
     int c = this->s.peek();
     this->trans_exception();
     if(c != istream::traits_type::eof()) {
@@ -52,7 +52,7 @@ optional<char> WrapIStream::get() {
   return this->pimpl->get();
 }
 
-const optional<const char &> WrapIStream::peek() {
+optional<const char &> WrapIStream::peek() {
   return this->pimpl->peek();
 }
 

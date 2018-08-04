@@ -10,6 +10,42 @@
 
 namespace ccpy {
 
+/// Wrap an existing `ISource` with buffer.
+template<typename T>
+class Buffered: public IBufSource<T> {
+public:
+  Buffered(ISource<T> &_upstream): upstream(_upstream), buf() {}
+  virtual ~Buffered() noexcept {}
+
+  virtual optional<T> get() {
+    if(this->buf.empty())
+      return this->upstream.get();
+    else {
+      auto x { std::move(this->buf.back()) };
+      this->buf.pop_back();
+      return x;
+    }
+  }
+
+  virtual optional<const T &> peek() {
+    if(this->buf.empty()) {
+      if(auto x = this->upstream.get())
+        this->buf.push_back(move(*x));
+      else
+        return {};
+    }
+    return this->buf.back();
+  }
+
+  virtual void putback(T &&x) {
+    this->buf.push_back(std::move(x));
+  }
+
+private:
+  ISource<T> &upstream;
+  std::vector<T> buf;
+};
+
 /// Wrap `std::istream` to `IBufSource<char>`
 class WrapIStream: public IBufSource<char> {
 public:
@@ -18,7 +54,7 @@ public:
 
   virtual optional<char> get();
   DECL_OP_GET
-  virtual const optional<const char &> peek();
+  virtual optional<const char &> peek();
   virtual void putback(char &&);
 
 private:
@@ -58,7 +94,7 @@ public:
     return move(x);
   }
   DECL_OP_GET
-  virtual const optional<const T &> peek() {
+  virtual optional<const T &> peek() {
     if(!this->head && !this->tail.empty()) {
       this->head = move(this->tail.back());
       this->tail.pop_back();
