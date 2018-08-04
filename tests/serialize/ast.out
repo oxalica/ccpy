@@ -2,5 +2,5 @@ LitEllipse
 LitBool(true)
 LitBool(false)
 LitInteger(123)
-ExprUnary(-, ExprName(a))
-ExprTupl(ExprLiteral(LitEllipse), ExprCall(ExprName(func), [ExprBinary(+, ExprLiteral(LitBool(true)), ExprUnary(~, ExprLiteral(LitInteger(1)))), ExprMember(ExprName(a), b)]))
+ExprUnary("-", ExprName("a"))
+ExprTuple(ExprLiteral(LitEllipse), ExprCall(ExprName("func"), [ExprBinary("+", ExprLiteral(LitBool(true)), ExprUnary("~", ExprLiteral(LitInteger(1)))), ExprMember(ExprName("a"), b)]))

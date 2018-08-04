@@ -11,6 +11,12 @@ int main() {
     StructParen { "Fn0", {} },
     StructParen { "Fn1", { StructValue { "e0" } } },
     StructParen { "Fn2", { StructValue { "e0" }, StructValue { "e1" } } },
+    StructParen { {}, {
+      StructStr { "" },
+      StructStr { "string! (escape" },
+      StructStr { "\"" },
+      StructStr { "\\\"\\" },
+    } },
     StructBracket { "Array0", {} },
     StructBracket { "Array1", { StructValue { "e0" } } },
     StructBracket { "Array2", { StructValue { "e0" }, StructValue { "e1" } } },

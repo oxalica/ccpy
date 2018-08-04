@@ -19,32 +19,47 @@ struct Impl {
     this->o.put(x);
   }
 
+  void put(char c) {
+    char s[2] = { c, '\0' };
+    *this << s;
+  }
+
   void put(const Structual &x) {
-    match(x,
-      [&](const StructValue &x) {
-        *this << x.value;
-      },
-      [&](const StructParen &x) {
-        if(x.name)
-          *this << *x.name;
-        *this << "(";
-        this->put_list(false, x.inner);
-        *this << ")";
-      },
-      [&](const StructBracket &x) {
-        if(x.name)
-          *this << *x.name;
-        *this << "[";
-        this->put_list(false, x.inner);
-        *this << "]";
-      },
-      [&](const StructBrace &x) {
-        if(x.name)
-          *this << *x.name << " ";
-        *this << "{";
-        this->put_list(true, x.inner);
-        *this << "}";
-      }
+    match(x
+    , [&](const StructValue &x) {
+      *this << x.value;
+    }
+    , [&](const StructStr &x) {
+      *this << "\"";
+      for(char c: x.str)
+        switch(c) {
+          case '"': *this << "\\\""; break;
+          case '\\': *this << "\\\\"; break;
+          default: *this << c;
+        }
+      *this << "\"";
+    }
+    , [&](const StructParen &x) {
+      if(x.name)
+        *this << *x.name;
+      *this << "(";
+      this->put_list(false, x.inner);
+      *this << ")";
+    }
+    , [&](const StructBracket &x) {
+      if(x.name)
+        *this << *x.name;
+      *this << "[";
+      this->put_list(false, x.inner);
+      *this << "]";
+    }
+    , [&](const StructBrace &x) {
+      if(x.name)
+        *this << *x.name << " ";
+      *this << "{";
+      this->put_list(true, x.inner);
+      *this << "}";
+    }
     );
   }
 

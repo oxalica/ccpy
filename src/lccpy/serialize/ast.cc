@@ -38,17 +38,17 @@ static Structual trans(const Literal &lit) {
 }
 
 static Structual trans(UnaryOp op) {
-  return StructValue { UnaryOpMap[static_cast<size_t>(op)] };
+  return StructStr { UnaryOpMap[static_cast<size_t>(op)] };
 }
 
 static Structual trans(BinaryOp op) {
-  return StructValue { BinaryOpMap[static_cast<size_t>(op)] };
+  return StructStr { BinaryOpMap[static_cast<size_t>(op)] };
 }
 
 static Structual trans(const Expr &expr) {
   return match<Structual>(expr
   , [](const ExprName &expr) {
-    return StructParen { "ExprName", { StructValue { expr.name } } };
+    return StructParen { "ExprName", { StructStr { expr.name } } };
   }
   , [](const ExprLiteral &expr) {
     return StructParen { "ExprLiteral", { trans(expr.lit) } };
@@ -66,7 +66,7 @@ static Structual trans(const Expr &expr) {
     } };
   }
   , [] (const ExprTuple &expr) {
-    return StructParen { "ExprTupl", trans_all(expr.elems) };
+    return StructParen { "ExprTuple", trans_all(expr.elems) };
   }
   , [](const ExprUnary &expr) {
     return StructParen { "ExprUnary", {
@@ -89,7 +89,7 @@ static Structual trans(const Stmt &stmt) {
     return StructValue { "StmtPass" };
   }
   , [](const StmtExpr &stmt) {
-    return StructParen { "Expr", { trans(stmt.expr) } };
+    return StructParen { "StmtExpr", { trans(stmt.expr) } };
   }
   );
 }

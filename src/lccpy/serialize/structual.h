@@ -9,12 +9,14 @@
 namespace ccpy::serialize {
 
 struct StructValue;
+struct StructStr;
 struct StructParen;
 struct StructBracket;
 struct StructBrace;
 
 using Structual = tagged_union<
   StructValue,
+  StructStr,
   StructParen,
   StructBracket,
   StructBrace
@@ -22,6 +24,10 @@ using Structual = tagged_union<
 
 struct StructValue {
   Str value;
+};
+
+struct StructStr {
+  Str str;
 };
 
 struct StructParen {

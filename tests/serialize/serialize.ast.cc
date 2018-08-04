@@ -34,7 +34,7 @@ int main() {
     }),
 
     ser(ExprTuple { move_list(
-      Expr { ExprLiteral { Literal { LitEllipse {} } } },
+      Expr { ExprLiteral { LitEllipse {} } },
       ExprCall { ExprName { "func" }, move_list(
         Expr { ExprBinary {
           BinaryOp::Add,

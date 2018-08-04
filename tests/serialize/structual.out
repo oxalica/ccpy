@@ -2,6 +2,7 @@ Value
 Fn0()
 Fn1(e0)
 Fn2(e0, e1)
+("", "string! (escape", "\"", "\\\"\\")
 Array0[]
 Array1[e0]
 Array2[e0, e1]
