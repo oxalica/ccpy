@@ -9,9 +9,9 @@ namespace ccpy::parse {
 
 namespace {
 
-using OptTok = optional<Token>;
+using OptTokRef = optional<const Token &>;
 
-bool is_expr_begin(const OptTok &tok) {
+bool is_expr_begin(OptTokRef tok) {
   if(!tok)
     return false;
   return match<bool>(*tok
@@ -30,7 +30,7 @@ bool is_expr_begin(const OptTok &tok) {
   );
 }
 
-bool is_symbol(const OptTok &tok, Symbol sym) {
+bool is_symbol(OptTokRef tok, Symbol sym) {
   if(!tok)
     return false;
   return match<bool>(*tok,
@@ -45,7 +45,7 @@ struct Parser::Impl {
   IBufSource<Token> &is;
 
   optional<Stmt> get_stmt() {
-    auto &nxt = this->is.peek();
+    auto nxt = this->is.peek();
     if(!nxt)
       return {};
     return match<Stmt>(*nxt
@@ -79,7 +79,7 @@ struct Parser::Impl {
   }
 
   bool expect_comma() {
-    if(auto &tok = this->is.peek())
+    if(auto tok = this->is.peek())
       if(is_symbol(tok, Symbol::Comma)) {
         this->is.get();
         return true;
@@ -94,8 +94,8 @@ struct Parser::Impl {
   Expr get_expr_val() {
     Expr ret = this->get_expr_term();
     for(;;) {
-      auto &tok = this->is.peek();
-      optional<BinaryOp> op;
+      auto tok = this->is.peek();
+      BinaryOp op;
       if(is_symbol(tok, Symbol::Add))
         op = BinaryOp::Add;
       else if(is_symbol(tok, Symbol::Sub))
@@ -106,7 +106,7 @@ struct Parser::Impl {
       this->is.get();
       auto lexpr = to_owned(move(ret));
       auto rexpr = to_owned(this->get_expr_term());
-      ret = Expr { ExprBinary { *op, move(lexpr), move(rexpr) } };
+      ret = Expr { ExprBinary { op, move(lexpr), move(rexpr) } };
     }
     return ret;
   }
@@ -114,8 +114,8 @@ struct Parser::Impl {
   Expr get_expr_term() {
     Expr ret = this->get_expr_factor();
     for(;;) {
-      auto &tok = this->is.peek();
-      optional<BinaryOp> op;
+      auto tok = this->is.peek();
+      BinaryOp op;
       if(is_symbol(tok, Symbol::Mul))
         op = BinaryOp::Mul;
       else if(is_symbol(tok, Symbol::Div))
@@ -128,36 +128,35 @@ struct Parser::Impl {
       this->is.get();
       auto lexpr = to_owned(move(ret));
       auto rexpr = to_owned(this->get_expr_term());
-      ret = Expr { ExprBinary { *op, move(lexpr), move(rexpr) } };
+      ret = Expr { ExprBinary { op, move(lexpr), move(rexpr) } };
     }
     return ret;
   }
 
   Expr get_expr_factor() {
-    auto &tok = this->is.peek();
+    auto tok = this->is.peek();
     if(!tok)
       throw StreamFailException { "Expect expr atom, found EOF" };
 
-    optional<UnaryOp> op;
+    UnaryOp op;
     if(is_symbol(*tok, Symbol::Add))
       op = UnaryOp::Pos;
     else if(is_symbol(*tok, Symbol::Sub))
       op = UnaryOp::Neg;
     else if(is_symbol(*tok, Symbol::Not))
       op = UnaryOp::Not;
-
-    if(!op)
+    else
       return this->get_expr_atom();
 
     this->is.get();
     auto expr = to_owned(this->get_expr_factor()); // Recur
-    return ExprUnary { *op, move(expr) };
+    return ExprUnary { op, move(expr) };
   }
 
   Expr get_expr_atom() {
     Expr ret = this->get_atom();
     for(;;) {
-      auto &tok = this->is.peek();
+      auto tok = this->is.peek();
       if(is_symbol(tok, Symbol::LParen)) {
         // Function call
         this->is.get();

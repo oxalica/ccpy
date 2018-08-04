@@ -24,7 +24,7 @@ template<typename T>
 class IBufSource: public ISource<T> {
 public:
   /// `std::nullopt` for the end of stream.
-  virtual const optional<T> &peek() = 0;
+  virtual const optional<const T &> peek() = 0;
   virtual void putback(T &&) = 0;
   virtual void putback(const T &x) { this->putback(T(x)); }
 };

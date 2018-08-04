@@ -18,7 +18,7 @@ public:
 
   virtual optional<char> get();
   DECL_OP_GET
-  virtual const optional<char> &peek();
+  virtual const optional<const char &> peek();
   virtual void putback(char &&);
 
 private:
@@ -58,12 +58,13 @@ public:
     return move(x);
   }
   DECL_OP_GET
-  virtual const optional<T> &peek() {
+  virtual const optional<const T &> peek() {
     if(!this->head && !this->tail.empty()) {
       this->head = move(this->tail.back());
       this->tail.pop_back();
-    }
-    return this->head;
+      return *this->head;
+    } else
+      return {};
   }
   virtual void putback(T &&x) {
     this->tail.push_back(move(x));

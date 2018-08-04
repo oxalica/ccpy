@@ -24,16 +24,17 @@ struct WrapIStream::Impl {
     return {};
   }
 
-  const optional<char> &peek() {
+  const optional<const char &> peek() {
     int c = this->s.peek();
     this->trans_exception();
-    if(c != istream::traits_type::eof())
+    if(c != istream::traits_type::eof()) {
       this->buf = static_cast<char>(c);
-    else {
+      return *this->buf;
+    } else {
       this->buf = {}; // Stream end
       this->s.clear();
+      return {};
     }
-    return this->buf;
   }
 
   void putback(char c) {
@@ -51,7 +52,7 @@ optional<char> WrapIStream::get() {
   return this->pimpl->get();
 }
 
-const optional<char> &WrapIStream::peek() {
+const optional<const char &> WrapIStream::peek() {
   return this->pimpl->peek();
 }
 

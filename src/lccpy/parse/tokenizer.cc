@@ -17,6 +17,8 @@ namespace ccpy::parse {
 
 namespace {
 
+using OptCharRef = optional<const char &>;
+
 size_t SYMBOL_MAX_LEN = 0;
 unordered_map<Str, Keyword> KEYWORD_REV_MAP;
 unordered_map<Str, Symbol> SYMBOL_REV_MAP;
@@ -42,19 +44,19 @@ void init_tables() {
   SYMBOL_MAX_LEN = mxlen;
 }
 
-bool is_digit(optional<char> c) {
+bool is_digit(OptCharRef c) {
   return c ? isdigit(static_cast<unsigned char>(*c)) : false;
 }
 
-bool is_name_begin(optional<char> c) {
+bool is_name_begin(OptCharRef c) {
   return c ? *c == '_' || isalpha(static_cast<unsigned char>(*c)) : false;
 }
 
-bool is_name_continue(optional<char> c) {
+bool is_name_continue(OptCharRef c) {
   return c ? *c == '_' || isalnum(static_cast<unsigned char>(*c)) : false;
 }
 
-bool is_symbol_char(optional<char> c) {
+bool is_symbol_char(OptCharRef c) {
   return c ? SYMBOL_CHARS[static_cast<unsigned char>(*c)] : false;
 }
 
