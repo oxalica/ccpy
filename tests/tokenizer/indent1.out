@@ -1,6 +1,8 @@
 Name("a")
+Newline
 Indent
 Name("b")
+Newline
 Indent
 Name("c")
 Dedent

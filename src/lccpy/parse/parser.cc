@@ -44,6 +44,19 @@ bool is_symbol(OptTokRef tok, Symbol sym) {
 struct Parser::Impl {
   IBufSource<Token> &is;
 
+  void expect_newline() {
+    auto tok = this->is.get();
+    if(!tok)
+      return; // EOF as newline
+    match(move(*tok)
+    , [](TokNewline &&) {}
+    , [](TokDedent &&) {} // Dedent before EOF
+    , [](auto &&) {
+      throw StreamFailException { "Expecting newline" };
+    }
+    );
+  }
+
   optional<Stmt> get_stmt() {
     auto nxt = this->is.peek();
     if(!nxt)
@@ -53,6 +66,7 @@ struct Parser::Impl {
       switch(tok.keyword) {
         case Keyword::Pass:
           this->is.get();
+          this->expect_newline();
           return StmtPass {};
         default:
           throw StreamFailException { "Unexcepted keyword" };
@@ -60,6 +74,7 @@ struct Parser::Impl {
     }
     , [&](auto &) {
       auto ret = this->get_expr_list();
+      this->expect_newline();
       auto expr = ret.first.size() == 1 && !ret.second
         ? move(ret.first.front())
         : ExprTuple { move(ret.first) };

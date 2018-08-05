@@ -4,10 +4,12 @@ Name("aaa123")
 Symbol("+")
 Integer("321")
 Name("aaa")
+Newline
 Symbol("...")
 Symbol(".")
 Symbol("...")
 Symbol(".")
 Symbol(".")
 Symbol(".")
+Newline
 End

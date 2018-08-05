@@ -3,5 +3,5 @@ a
 1 + 2 * ~~3
 a + 1 % ...
 1,
+2, 3 # This will not be concated to previous line
 pass
-1, 2, 3

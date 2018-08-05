@@ -80,7 +80,7 @@ struct Tokenizer::Impl {
 
   IBufSource<char> &is;
   std::vector<std::size_t> indents; // Always has at least one element: 0
-  bool file_begin;
+  bool last_newline;
   size_t cur_indent;
 
   bool expect_eat(char c) {
@@ -91,8 +91,12 @@ struct Tokenizer::Impl {
   }
 
   optional<Token> get() {
-    if(this->expect_eat('\n') || this->file_begin || !this->is.peek()) { // or EOF
-      this->file_begin = false;
+    if(!this->last_newline && this->expect_eat('\n')) {
+      this->last_newline = true;
+      return TokNewline {};
+    }
+    if(this->last_newline || !this->is.peek()) { // or EOF
+      this->last_newline = false;
       do {
         this->cur_indent = this->eat_indent();
         this->eat_space_comment(); // Remove tailing spaces and comments

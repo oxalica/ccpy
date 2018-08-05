@@ -1,1 +1,1 @@
-Fail: Expect expr atom, found EOF
+Fail: Unexpected token for atom

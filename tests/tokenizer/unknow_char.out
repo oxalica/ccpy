@@ -1,4 +1,5 @@
 Integer("1")
 Integer("2")
+Newline
 Integer("3")
 Fail: Invalid token beginning

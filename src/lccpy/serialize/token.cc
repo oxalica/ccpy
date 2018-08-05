@@ -19,27 +19,30 @@ Structual parened(Str name, Str value) {
 }
 
 Structual trans(const Token &tok) {
-  return match<Structual>(tok,
-    [&](const TokKeyword &tok) {
-      auto kw = KeywordMap[static_cast<size_t>(tok.keyword)];
-      return parened("Keyword", kw);
-    },
-    [&](const TokSymbol &tok) {
-      auto sym = SymbolMap[static_cast<size_t>(tok.symbol)];
-      return parened("Symbol", sym);
-    },
-    [&](const TokName &tok) {
-      return parened("Name", tok.name);
-    },
-    [&](const TokInteger &tok) {
-      return parened("Integer", IntegerSerializer {}(tok.integer));
-    },
-    [&](const TokIndent &) {
-      return Structual { StructValue { "Indent" } };
-    },
-    [&](const TokDedent &) {
-      return Structual { StructValue { "Dedent" } };
-    }
+  return match<Structual>(tok
+  , [&](const TokKeyword &tok) {
+    auto kw = KeywordMap[static_cast<size_t>(tok.keyword)];
+    return parened("Keyword", kw);
+  }
+  , [&](const TokSymbol &tok) {
+    auto sym = SymbolMap[static_cast<size_t>(tok.symbol)];
+    return parened("Symbol", sym);
+  }
+  , [&](const TokName &tok) {
+    return parened("Name", tok.name);
+  }
+  , [&](const TokInteger &tok) {
+    return parened("Integer", IntegerSerializer {}(tok.integer));
+  }
+  , [&](const TokIndent &) {
+    return Structual { StructValue { "Indent" } };
+  }
+  , [&](const TokDedent &) {
+    return Structual { StructValue { "Dedent" } };
+  }
+  , [&](const TokNewline &) {
+    return Structual { StructValue { "Newline" } };
+  }
   );
 }
 

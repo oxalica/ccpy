@@ -40,15 +40,17 @@ struct TokName    { Str name; };
 struct TokInteger { Integer integer; };
 struct TokIndent  {};
 struct TokDedent  {};
+struct TokNewline {};
 
-using Token = tagged_union<
-  TokKeyword,
-  TokSymbol,
-  TokName,
-  TokInteger,
-  TokIndent,
-  TokDedent
->;
+using Token = tagged_union
+  < TokKeyword
+  , TokSymbol
+  , TokName
+  , TokInteger
+  , TokIndent
+  , TokDedent
+  , TokNewline
+  >;
 
 } // namespace ccpy::ast
 
