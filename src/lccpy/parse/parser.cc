@@ -21,6 +21,7 @@ bool is_expr_begin(OptTokRef tok) {
     switch(tok.symbol) {
       case Symbol::DotDotDot: // `...`
       case Symbol::Not: case Symbol::Add: case Symbol::Sub: // Unary op
+      case Symbol::LParen: // Group or tuple
         return true;
       default:
         return false;
@@ -44,16 +45,41 @@ bool is_symbol(OptTokRef tok, Symbol sym) {
 struct Parser::Impl {
   IBufSource<Token> &is;
 
-  void expect_newline() {
-    auto tok = this->is.get();
-    if(!tok)
-      return; // EOF as newline
-    match(move(*tok)
-    , [](TokNewline &&) {}
-    , [](TokDedent &&) {} // Dedent before EOF
-    , [](auto &&) {
-      throw StreamFailException { "Expecting newline" };
+  template<typename ...Fs>
+  bool try_eat(bool eof_ok, Fs ...fs) {
+    auto tok = this->is.peek();
+    if(tok ? match<bool>(*tok, fs...) : eof_ok) {
+      this->is.get();
+      return true;
     }
+    return false;
+  }
+
+  template<typename ...Fs>
+  void expect(const char msg[], bool eof_ok, Fs ...fs) {
+    if(!this->try_eat(eof_ok, fs...))
+      throw StreamFailException { msg };
+  }
+
+  bool try_eat_symbol(Symbol sym) {
+    return this->try_eat(false
+    , [=](const TokSymbol &tok) { return tok.symbol == sym; }
+    , [](auto &) { return false; }
+    );
+  }
+
+  void expect_newline() {
+    this->expect("Expecting newline", true
+    , [](const TokNewline &) { return true; }
+    , [](const TokDedent &) { return true; } // Dedent before EOF
+    , [](auto &) { return false; }
+    );
+  }
+
+  void expect_symbol(const char msg[], Symbol sym) {
+    return this->expect(msg, false
+    , [=](const TokSymbol &tok) { return tok.symbol == sym; }
+    , [](auto &) { return false; }
     );
   }
 
@@ -88,19 +114,10 @@ struct Parser::Impl {
     vector<Expr> v;
     while(is_expr_begin(this->is.peek())) {
       v.push_back(this->get_expr());
-      if(!this->expect_comma())
+      if(!this->try_eat_symbol(Symbol::Comma))
         return make_pair(move(v), false);
     }
     return make_pair(move(v), true);
-  }
-
-  bool expect_comma() {
-    if(auto tok = this->is.peek())
-      if(is_symbol(tok, Symbol::Comma)) {
-        this->is.get();
-        return true;
-      }
-    return false;
   }
 
   Expr get_expr() {
@@ -172,6 +189,7 @@ struct Parser::Impl {
         // Function call
         this->is.get();
         ret = ExprCall { move(ret), this->get_expr_list().first };
+        this->expect_symbol("Expecting `)`", Symbol::RParen);
       } else if(is_symbol(tok, Symbol::Dot)) {
         // Member access
         this->is.get();
@@ -200,6 +218,7 @@ struct Parser::Impl {
           return ExprLiteral { LitEllipse {} };
         case Symbol::LParen: {
           auto ret = this->get_expr_list();
+          this->expect_symbol("Expecting `)`", Symbol::RParen);
           return ret.first.size() == 1 && !ret.second
             ? move(ret.first.front())
             : ExprTuple { move(ret.first) };

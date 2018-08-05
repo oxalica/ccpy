@@ -1,0 +1,4 @@
+StmtExpr(ExprCall(ExprName("print"), [ExprBinary("+", ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(1)))]))
+StmtExpr(ExprCall(ExprName("print"), [ExprTuple(ExprBinary("+", ExprLiteral(LitInteger(1)), ExprBinary("*", ExprLiteral(LitInteger(2)), ExprLiteral(LitInteger(3)))), ExprBinary("+", ExprBinary("*", ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2))), ExprLiteral(LitInteger(3))))]))
+StmtExpr(ExprTuple(ExprCall(ExprName("print"), []), ExprCall(ExprName("print"), [ExprBinary("-", ExprBinary("*", ExprBinary("+", ExprLiteral(LitInteger(11)), ExprLiteral(LitInteger(11))), ExprLiteral(LitInteger(2))), ExprLiteral(LitInteger(2))), ExprTuple()])))
+End
