@@ -4,19 +4,15 @@
 #include <vector>
 #include "./expr.h"
 #include "../util/adt.h"
+#include "../util/macro.h"
 
 namespace ccpy::ast {
 
-struct StmtPass {};
+#define STMT_LIST(F) \
+  F(StmtPass, {}) \
+  F(StmtExpr, { Expr expr; })\
 
-struct StmtExpr {
-  Expr expr;
-};
-
-using Stmt = tagged_union<
-  StmtPass,
-  StmtExpr
->;
+DECL_TAGGED_UNION(Stmt, STMT_LIST)
 
 } // namespace ccpy::ast
 

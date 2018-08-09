@@ -23,7 +23,7 @@ struct Span {
   F(In, "in") \
   F(Def, "def")
 
-DECL_REFL_ENUM(Keyword, KEYWORD_LIST);
+DECL_REFL_ENUM(Keyword, KEYWORD_LIST)
 
 #define SYMBOL_LIST(F) \
   F(Comma, ",") F(Colon, ":") F(SemiColon, ";") \
@@ -32,25 +32,18 @@ DECL_REFL_ENUM(Keyword, KEYWORD_LIST);
   F(Not, "~") \
   F(Add, "+") F(Sub, "-") F(Mul, "*") F(Div, "/") F(Mod, "%")
 
-DECL_REFL_ENUM(Symbol, SYMBOL_LIST);
+DECL_REFL_ENUM(Symbol, SYMBOL_LIST)
 
-struct TokKeyword { Keyword keyword; };
-struct TokSymbol  { Symbol symbol; };
-struct TokName    { Str name; };
-struct TokInteger { Integer integer; };
-struct TokIndent  {};
-struct TokDedent  {};
-struct TokNewline {};
+#define TOKEN_LIST(F) \
+  F(TokKeyword, { Keyword keyword; }) \
+  F(TokSymbol, { Symbol symbol; }) \
+  F(TokName, { Str name; }) \
+  F(TokInteger, { Integer integer; }) \
+  F(TokIndent, {}) \
+  F(TokDedent, {}) \
+  F(TokNewline, {}) \
 
-using Token = tagged_union
-  < TokKeyword
-  , TokSymbol
-  , TokName
-  , TokInteger
-  , TokIndent
-  , TokDedent
-  , TokNewline
-  >;
+DECL_TAGGED_UNION(Token, TOKEN_LIST)
 
 } // namespace ccpy::ast
 

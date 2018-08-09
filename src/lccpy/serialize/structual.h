@@ -8,42 +8,14 @@
 
 namespace ccpy::serialize {
 
-struct StructValue;
-struct StructStr;
-struct StructParen;
-struct StructBracket;
-struct StructBrace;
+#define STRUCTUAL_LIST(F) \
+  F(StructValue, { Str value; }) \
+  F(StructStr, { Str str; }) \
+  F(StructParen, { optional<Str> name; std::vector<Structual> inner; }) \
+  F(StructBracket, { optional<Str> name; std::vector<Structual> inner; }) \
+  F(StructBrace, { optional<Str> name; std::vector<Structual> inner; }) \
 
-using Structual = tagged_union<
-  StructValue,
-  StructStr,
-  StructParen,
-  StructBracket,
-  StructBrace
->;
-
-struct StructValue {
-  Str value;
-};
-
-struct StructStr {
-  Str str;
-};
-
-struct StructParen {
-  optional<Str> name;
-  std::vector<Structual> inner;
-};
-
-struct StructBracket {
-  optional<Str> name;
-  std::vector<Structual> inner;
-};
-
-struct StructBrace {
-  optional<Str> name;
-  std::vector<Structual> inner;
-};
+DECL_TAGGED_UNION(Structual, STRUCTUAL_LIST)
 
 class StructualSerializer: public ISerializer<Structual, Str> {
 public:

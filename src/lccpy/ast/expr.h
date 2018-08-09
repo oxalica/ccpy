@@ -9,79 +9,33 @@
 
 namespace ccpy::ast {
 
-struct LitInteger {
-  Integer value;
-};
+#define LITERAL_LIST(F) \
+  F(LitInteger, { Integer value; }) \
+  F(LitBool, { bool value; }) \
+  F(LitEllipse, {}) \
 
-struct LitBool {
-  bool value;
-};
-
-struct LitEllipse {}; // `...`
-
-using Literal = tagged_union<
-  LitInteger,
-  LitBool,
-  LitEllipse
->;
+DECL_TAGGED_UNION(Literal, LITERAL_LIST)
 
 #define UNARY_OP_LIST(F) \
-  F(Pos, "+") F(Neg, "-") F(Not, "~")
-DECL_REFL_ENUM(UnaryOp, UNARY_OP_LIST);
+  F(Pos, "+") F(Neg, "-") F(Not, "~") \
+
+DECL_REFL_ENUM(UnaryOp, UNARY_OP_LIST)
 
 #define BINARY_OP_LIST(F) \
-  F(Add, "+") F(Sub, "-") F(Mul, "*") F(Div, "/") F(Mod, "%")
-DECL_REFL_ENUM(BinaryOp, BINARY_OP_LIST);
+  F(Add, "+") F(Sub, "-") F(Mul, "*") F(Div, "/") F(Mod, "%") \
 
-struct ExprName;
-struct ExprLiteral;
-struct ExprMember;
-struct ExprCall;
-struct ExprTuple;
-struct ExprUnary;
-struct ExprBinary;
+DECL_REFL_ENUM(BinaryOp, BINARY_OP_LIST)
 
-using Expr = tagged_union<
-  ExprName,
-  ExprLiteral,
-  ExprMember,
-  ExprCall,
-  ExprTuple,
-  ExprUnary,
-  ExprBinary
->;
+#define EXPR_LIST(F) \
+  F(ExprName, { Str name; }) \
+  F(ExprLiteral, { Literal lit; }) \
+  F(ExprMember, { owned<Expr> obj; Str member; }) \
+  F(ExprCall, { owned<Expr> func; std::vector<Expr> args; }) \
+  F(ExprTuple, { std::vector<Expr> elems; }) \
+  F(ExprUnary, { UnaryOp op; owned<Expr> expr; }) \
+  F(ExprBinary, { BinaryOp op; owned<Expr> lexpr, rexpr; }) \
 
-struct ExprName {
-  Str name;
-};
-
-struct ExprLiteral {
-  Literal lit;
-};
-
-struct ExprMember {
-  owned<Expr> obj;
-  Str member;
-};
-
-struct ExprCall {
-  owned<Expr> func;
-  std::vector<Expr> args;
-};
-
-struct ExprTuple {
-  std::vector<Expr> elems;
-};
-
-struct ExprUnary {
-  UnaryOp op;
-  owned<Expr> expr;
-};
-
-struct ExprBinary {
-  BinaryOp op;
-  owned<Expr> lexpr, rexpr;
-};
+DECL_TAGGED_UNION(Expr, EXPR_LIST)
 
 } // namespace ccpy::ast
 
