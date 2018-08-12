@@ -1,0 +1,16 @@
+StmtExpr(ExprTuple(ExprLiteral(LitInteger(1)), ExprCall(ExprName("f"), [ExprLiteral(LitInteger(2)), ExprLiteral(LitEllipse)]), ExprBinary("+", ExprMember(ExprName("a"), b), ExprLiteral(LitInteger(1)))))
+StmtExpr(ExprTuple(ExprLiteral(LitInteger(1)), ExprCall(ExprName("f"), [ExprLiteral(LitInteger(2)), ExprLiteral(LitEllipse)]), ExprBinary("+", ExprMember(ExprName("a"), b), ExprLiteral(LitInteger(1)))))
+
+StmtExpr(ExprTuple(ExprBinary("+", ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(1))), ExprCall(ExprName("f"), [ExprBinary("*", ExprLiteral(LitInteger(2)), ExprLiteral(LitInteger(3))), ExprUnary("~", ExprLiteral(LitInteger(2)))]), ExprUnary("~", ExprUnary("-", ExprLiteral(LitInteger(3)))), ExprUnary("+", ExprUnary("-", ExprUnary("+", ExprUnary("+", ExprUnary("-", ExprUnary("+", ExprUnary("-", ExprLiteral(LitInteger(4)))))))))))
+StmtExpr(ExprTuple(ExprLiteral(LitInteger(2)), ExprCall(ExprName("f"), [ExprLiteral(LitInteger(6)), ExprLiteral(LitInteger(-3))]), ExprLiteral(LitInteger(2)), ExprLiteral(LitInteger(-4))))
+
+StmtExpr(ExprTuple(ExprBinary("+", ExprBinary("+", ExprName("a"), ExprLiteral(LitInteger(1))), ExprLiteral(LitInteger(2))), ExprBinary("+", ExprName("a"), ExprBinary("+", ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2))))))
+StmtExpr(ExprTuple(ExprBinary("+", ExprBinary("+", ExprName("a"), ExprLiteral(LitInteger(1))), ExprLiteral(LitInteger(2))), ExprBinary("+", ExprName("a"), ExprLiteral(LitInteger(3)))))
+
+StmtExpr(ExprTuple(ExprBinary("+", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2))), ExprBinary("-", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2))), ExprBinary("*", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2))), ExprBinary("/", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2))), ExprBinary("%", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2)))))
+StmtExpr(ExprTuple(ExprLiteral(LitInteger(12)), ExprLiteral(LitInteger(8)), ExprLiteral(LitInteger(20)), ExprLiteral(LitInteger(5)), ExprLiteral(LitInteger(0))))
+
+StmtExpr(ExprBinary("-", ExprBinary("+", ExprLiteral(LitInteger(1)), ExprBinary("*", ExprLiteral(LitInteger(2)), ExprLiteral(LitInteger(3)))), ExprUnary("~", ExprLiteral(LitInteger(4)))))
+StmtExpr(ExprLiteral(LitInteger(12)))
+
+End

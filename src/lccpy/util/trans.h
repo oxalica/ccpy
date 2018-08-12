@@ -13,6 +13,16 @@ public:
   virtual U operator()(const T &) const = 0;
 };
 
+/// Transformer transforming T to U (destructive).
+template<typename T, typename U>
+class IHardTrans {
+public:
+  virtual ~IHardTrans() noexcept {}
+
+  /// Should be pure
+  virtual U operator()(T &&) const = 0;
+};
+
 } // namespace ccpy
 
 #endif // __CCPY_UTIL_TRANSFORMER__

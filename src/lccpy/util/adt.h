@@ -52,6 +52,11 @@ R match(const tagged_union<Ts...> &u, Fs ...arms) {
 }
 
 template<typename R = void, typename ...Ts, typename ...Fs>
+R match(tagged_union<Ts...> &u, Fs ...arms) {
+  return _impl::match_impl<R, Ts &...>(u, arms...);
+}
+
+template<typename R = void, typename ...Ts, typename ...Fs>
 R match(tagged_union<Ts...> &&u, Fs ...arms) {
   return _impl::match_impl<R, Ts &&...>(std::move(u), arms...);
 }
