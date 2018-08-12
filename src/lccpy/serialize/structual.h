@@ -2,8 +2,9 @@
 #define __CCPY_SERIALIZE_STRUCTUAL__
 
 #include <vector>
-#include "./serializer.h"
 #include "../util/adt.h"
+#include "../util/macro.h"
+#include "../util/trans.h"
 #include "../util/types.h"
 
 namespace ccpy::serialize {
@@ -17,7 +18,7 @@ namespace ccpy::serialize {
 
 DECL_TAGGED_UNION(Structual, STRUCTUAL_LIST)
 
-class StructualSerializer: public ISerializer<Structual, Str> {
+class StructualSerializer: public ITrans<Structual, Str> {
 public:
   StructualSerializer() {}
   virtual ~StructualSerializer() noexcept {}

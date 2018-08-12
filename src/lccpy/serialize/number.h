@@ -1,12 +1,12 @@
 #ifndef __CCPY_SERIALIZE_INTEGER__
 #define __CCPY_SERIALIZE_INTEGER__
 
-#include "./serializer.h"
+#include "../util/trans.h"
 #include "../util/types.h"
 
 namespace ccpy::serialize {
 
-class IntegerSerializer: public ISerializer<Integer, Str> {
+class IntegerSerializer: public ITrans<Integer, Str> {
 public:
   IntegerSerializer() {}
   virtual ~IntegerSerializer() noexcept {}
@@ -14,7 +14,7 @@ public:
   Str operator()(const Integer &) const;
 };
 
-class DecimalSerializer: public ISerializer<Decimal, Str> {
+class DecimalSerializer: public ITrans<Decimal, Str> {
 public:
   DecimalSerializer() {}
   virtual ~DecimalSerializer() noexcept {}

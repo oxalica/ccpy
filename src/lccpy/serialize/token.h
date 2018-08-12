@@ -6,7 +6,7 @@
 
 namespace ccpy::serialize {
 
-class TokenTreeSerializer: public ISerializer<ast::Token, Structual> {
+class TokenTreeSerializer: public ITrans<ast::Token, Structual> {
 public:
   TokenTreeSerializer() {}
   virtual ~TokenTreeSerializer() noexcept {}
