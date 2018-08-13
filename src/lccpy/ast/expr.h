@@ -13,6 +13,7 @@ namespace ccpy::ast {
   F(LitInteger, { Integer value; }) \
   F(LitBool, { bool value; }) \
   F(LitEllipse, {}) \
+  F(LitNone, {}) \
 
 DECL_TAGGED_UNION(Literal, LITERAL_LIST)
 

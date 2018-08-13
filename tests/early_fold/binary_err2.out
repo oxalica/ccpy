@@ -1,0 +1,2 @@
+StmtExpr(ExprBinary("+", ExprLiteral(LitBool(true)), ExprLiteral(LitNone)))
+Fold error: Invalid binary op for LitBool

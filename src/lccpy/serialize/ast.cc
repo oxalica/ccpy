@@ -31,6 +31,9 @@ static Structual trans(const Literal &lit) {
       StructValue { lit.value ? "true" : "false" },
     } };
   }
+  , [](const LitNone &) {
+    return StructValue { "LitNone" };
+  }
   , [](const LitEllipse &) {
     return StructValue { "LitEllipse" };
   }

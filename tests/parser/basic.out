@@ -8,4 +8,6 @@ StmtPass
 StmtExpr(ExprTuple(ExprLiteral(LitInteger(1)), ExprTuple(ExprLiteral(LitInteger(2))), ExprTuple(ExprLiteral(LitInteger(3)), ExprLiteral(LitInteger(4))), ExprLiteral(LitInteger(5))))
 StmtExpr(ExprCall(ExprCall(ExprName("f"), [ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2)), ExprBinary("+", ExprLiteral(LitInteger(3)), ExprCall(ExprLiteral(LitInteger(4)), [])), ExprTuple()]), []))
 StmtExpr(ExprTuple())
+StmtExpr(ExprLiteral(LitBool(true)))
+StmtExpr(ExprTuple(ExprLiteral(LitBool(true)), ExprBinary("+", ExprLiteral(LitBool(false)), ExprLiteral(LitNone))))
 End

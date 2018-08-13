@@ -17,6 +17,14 @@ bool is_expr_begin(OptTokRef tok) {
   return match<bool>(*tok
   , [](const TokName &) { return true; }
   , [](const TokInteger &) { return true; }
+  , [](const TokKeyword &tok) {
+    switch(tok.keyword) {
+      case Keyword::True: case Keyword::False: case Keyword::None:
+        return true;
+      default:
+        return false;
+    }
+  }
   , [](const TokSymbol &tok) {
     switch(tok.symbol) {
       case Symbol::DotDotDot: // `...`
@@ -87,6 +95,14 @@ struct Parser::Impl {
     auto nxt = this->is.peek();
     if(!nxt)
       return {};
+    if(is_expr_begin(this->is.peek())) {
+      auto ret = this->get_expr_list();
+      this->expect_newline();
+      auto expr = ret.first.size() == 1 && !ret.second
+        ? move(ret.first.front())
+        : ExprTuple { move(ret.first) };
+      return StmtExpr { move(expr) };
+    }
     return match<Stmt>(*nxt
     , [&](const TokKeyword &tok) {
       switch(tok.keyword) {
@@ -95,16 +111,11 @@ struct Parser::Impl {
           this->expect_newline();
           return StmtPass {};
         default:
-          throw StreamFailException { "Unexcepted keyword" };
+          throw StreamFailException { "Unexpected keyword for stmt" };
       }
     }
-    , [&](auto &) {
-      auto ret = this->get_expr_list();
-      this->expect_newline();
-      auto expr = ret.first.size() == 1 && !ret.second
-        ? move(ret.first.front())
-        : ExprTuple { move(ret.first) };
-      return StmtExpr { move(expr) };
+    , [&](auto &&) -> Stmt {
+      throw StreamFailException { "Unexpected token for stmt" };
     }
     );
   }
@@ -212,6 +223,15 @@ struct Parser::Impl {
 
   Expr get_atom() {
     return match<Expr>(*this->is.get() // Must not EOF. Checked as expr begin
+    , [&](TokKeyword &&tok) {
+      switch(tok.keyword) {
+        case Keyword::True:  return ExprLiteral { LitBool { true } };
+        case Keyword::False: return ExprLiteral { LitBool { false } };
+        case Keyword::None:  return ExprLiteral { LitNone {} };
+        default:
+          throw StreamFailException { "Unexpected keyword for atom" };
+      }
+    }
     , [&](TokSymbol &&tok) -> Expr {
       switch(tok.symbol) {
         case Symbol::DotDotDot:

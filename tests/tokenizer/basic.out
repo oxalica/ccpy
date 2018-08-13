@@ -12,4 +12,8 @@ Symbol(".")
 Symbol(".")
 Symbol(".")
 Newline
+Keyword("True")
+Keyword("False")
+Keyword("None")
+Newline
 End

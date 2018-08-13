@@ -21,7 +21,8 @@ struct Span {
   F(If, "if") F(Elif, "elif") F(Else, "else") \
   F(For, "for") \
   F(In, "in") \
-  F(Def, "def")
+  F(Def, "def") \
+  F(True, "True") F(False, "False") F(None, "None") \
 
 DECL_REFL_ENUM(Keyword, KEYWORD_LIST)
 
