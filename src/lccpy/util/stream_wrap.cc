@@ -9,7 +9,7 @@ namespace ccpy {
 
 struct WrapIStream::Impl {
   istream &s;
-  optional<char> buf;
+  char buf;
 
   void trans_exception() {
     this->s.exceptions(ios_base::badbit);
@@ -20,25 +20,22 @@ struct WrapIStream::Impl {
     if(this->s.get(c))
       return c;
     this->trans_exception();
-    this->s.clear();
     return {};
   }
 
   optional<const char &> peek() {
     int c = this->s.peek();
     this->trans_exception();
-    if(c != istream::traits_type::eof()) {
-      this->buf = static_cast<char>(c);
-      return *this->buf;
-    } else {
-      this->buf = {}; // Stream end
-      this->s.clear();
+    if(c == istream::traits_type::eof())
       return {};
-    }
+    this->buf = static_cast<char>(c);
+    return this->buf;
   }
 
   void putback(char c) {
     this->s.putback(c);
+    if(this->s.eof())
+      this->s.clear();
     this->trans_exception();
   }
 };

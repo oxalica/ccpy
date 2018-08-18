@@ -11,7 +11,7 @@ struct Impl {
 static bool is_lit(const Expr &e) {
   return match<bool>(e
   , [](const ExprLiteral &) { return true; }
-  , [](auto &&) { return false; }
+  , [](const auto &) { return false; }
   );
 }
 

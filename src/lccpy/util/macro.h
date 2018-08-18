@@ -20,7 +20,10 @@
   auto &operator>>(const _OP_GET &x) { x = this->get(); return *this; }
 #define DECL_OP_PUT \
   template<typename _OP_PUT> \
-  auto &operator<<(_OP_PUT x) { this->put(x); return *this; }
+  auto &operator<<(_OP_PUT &&x) { \
+    this->put(std::forward<_OP_PUT>(x)); \
+    return *this; \
+  }
 
 #define DECL_TAGGED_UNION(NAME, LIST) \
   LIST(DECL_TAGGED_UNION__FORWARD) \
