@@ -1,0 +1,5 @@
+1 + 2
+pass
+(2, 3)
+f((), x, -y.z, (None,))
+__intrinsic__none
