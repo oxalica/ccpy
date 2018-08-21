@@ -8,6 +8,8 @@ Str StringEscape::operator()(const Str &s) const {
     switch(c) {
       case '"':  ret += "\\\""; break;
       case '\\': ret += "\\\\"; break;
+      case '\t': ret += "\\t"; break;
+      case '\n': ret += "\\n"; break;
       default:   ret += c;
     }
   return ret + "\"";

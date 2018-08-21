@@ -142,6 +142,10 @@ struct Tokenizer::Impl {
       return this->eat_name_or_kw();
     else if(is_symbol_char(c))
       return this->eat_symbol();
+    else if(*c == '\'')
+      return this->eat_string_lit('\'');
+    else if(*c == '"')
+      return this->eat_string_lit('"');
     else
       throw StreamFailException { "Invalid token beginning" };
   }
@@ -181,6 +185,35 @@ struct Tokenizer::Impl {
     if(len == 0)
       throw StreamFailException { "Invalid symbol" };
     return TokSymbol { *sym };
+  }
+
+  Token eat_string_lit(char delim) {
+    this->is.get(); // Begin delim
+    string s;
+    for(;;) {
+      auto c = this->is.get();
+      if(!c)
+        throw StreamFailException { "Unclosed string literal" };
+      if(*c == delim)
+        break;
+      char ch = *c;
+      if(ch == '\\') {
+        auto esc = this->is.get();
+        if(!esc)
+          throw StreamFailException { "Expect escaped char" };
+        switch(*esc) {
+          case '\\': ch = '\\'; break;
+          case '\'': ch = '\''; break;
+          case '"':  ch = '"'; break;
+          case 'n':  ch = '\n'; break;
+          case 't':  ch = '\t'; break;
+          default:
+            throw StreamFailException { "Unknow escaped char" };
+        }
+      }
+      s.push_back(ch);
+    }
+    return TokString { move(s) };
   }
 };
 

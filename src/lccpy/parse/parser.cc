@@ -17,6 +17,7 @@ bool is_expr_begin(OptTokRef tok) {
   return match<bool>(*tok
   , [](const TokName &) { return true; }
   , [](const TokInteger &) { return true; }
+  , [](const TokString &) { return true; }
   , [](const TokKeyword &tok) {
     switch(tok.keyword) {
       case Keyword::True: case Keyword::False: case Keyword::None:
@@ -249,6 +250,9 @@ struct Parser::Impl {
     }
     , [](TokName &&tok) {
       return ExprName { move(tok.name) };
+    }
+    , [](TokString &&tok) {
+      return ExprLiteral { LitStr { move(tok.str) } };
     }
     , [](TokInteger &&tok) {
       return ExprLiteral { LitInteger { move(tok.integer) } };

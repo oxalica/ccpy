@@ -10,4 +10,6 @@ StmtExpr(ExprCall(ExprCall(ExprName("f"), [ExprLiteral(LitInteger(1)), ExprLiter
 StmtExpr(ExprTuple())
 StmtExpr(ExprLiteral(LitBool(true)))
 StmtExpr(ExprTuple(ExprLiteral(LitBool(true)), ExprBinary("+", ExprLiteral(LitBool(false)), ExprLiteral(LitNone))))
+StmtExpr(ExprTuple(ExprLiteral(LitStr("123")), ExprLiteral(LitStr("234"))))
+StmtExpr(ExprTuple(ExprLiteral(LitStr("3\n'")), ExprLiteral(LitStr("\\\""))))
 End

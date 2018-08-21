@@ -16,4 +16,10 @@ Keyword("True")
 Keyword("False")
 Keyword("None")
 Newline
+String("123")
+String("2\n34")
+Newline
+String("a\n\"b'")
+String("\"3'9\\")
+Newline
 End
