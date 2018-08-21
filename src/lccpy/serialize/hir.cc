@@ -1,8 +1,10 @@
 #include "./hir.h"
 #include "./escape.h"
 #include "./number.h"
+#include "../runtime/intrinsic.h"
 using namespace std;
 using namespace ccpy::hir;
+using namespace ccpy::runtime;
 
 namespace ccpy::serialize {
 
@@ -16,24 +18,13 @@ Str trans(size_t x) {
   return trans(Integer(x));
 }
 
-Str trans_offset(ptrdiff_t x) {
-  Str s = x >= 0 ? "+" : "";
-  s += trans(static_cast<size_t>(x));
-  return s;
-}
-
-Str trans(const Decimal &x) {
-  return DecimalSerializer {}(x);
-}
-
 Str trans(const Immediate &imm) {
   return match<Str>(imm
   , [](const ImmInteger &imm) { return trans(imm.value); }
-  , [](const ImmDecimal &imm) { return trans(imm.value); }
+  , [](const ImmBool &imm) { return imm.value ? "True" : "False"; }
   , [](const ImmStr &imm) { return StringEscape {}(imm.value); }
-  , [](const ImmIntrinsic &imm) {
-    return "Intrinsic " + StringEscape {}(imm.name);
-  }
+  , [](const ImmEllipse &) { return "Ellipse"; }
+  , [](const ImmNone &) { return "None"; }
   );
 }
 
@@ -57,24 +48,27 @@ Str trans(const HIR &hir) {
     return ret;
   }
   , [](const HIRClosure &hir) {
-    return "%" + trans(hir.dest) + " = Closure #" + trans(hir.closure_id);
+    return "%" + trans(hir.dest) + " = Closure #" + trans(hir.closure_id)
+      + "(" + trans(hir.captured) + ")";
   }
-  , [](const HIRCall &hir) {
-    return "%" + trans(hir.dest) + " = Call %" + trans(hir.fnargs);
+  , [](const HIRIntrinsicCall &hir) {
+    return "%" + trans(hir.dest) + " = " +
+      IntrinsicNameMap[static_cast<size_t>(hir.intrinsic_id)] +
+      "(%" + trans(hir.args) + ")";
   }
-  , [](const HIRCondJmp &hir) {
-    return "JmpIf %" + trans(hir.cond)
-      + " <" + trans_offset(hir.offset) + ">";
+  , [](const HIRJF &hir) {
+    return "JmpIfFalse %" + trans(hir.cond)
+      + " <" + trans(hir.target) + ">";
   }
   , [](const HIRReturn &hir) {
-    return "Return %" + trans(hir.source);
+    return "Return %" + trans(hir.value);
   }
   , [](const HIRRaise &hir) {
-    return "Raise %" + trans(hir.source);
+    return "Raise %" + trans(hir.value);
   }
   , [](const HIRPushExcept &hir) {
     return "PushExcept %" + trans(hir.dest)
-      + " <" + trans_offset(hir.offset) + ">";
+      + " <" + trans(hir.target) + ">";
   }
   , [](const HIRPopExcept &) {
     return "PopExcept";

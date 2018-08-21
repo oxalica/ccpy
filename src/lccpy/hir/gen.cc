@@ -1,13 +1,19 @@
 #include "./gen.h"
+#include <unordered_map>
 #include <utility>
 #include <vector>
 #include "./name_scope.h"
 #include "../ast/expr.h"
 #include "../ast/stmt.h"
+#include "../runtime/intrinsic.h"
+#include "../util/adt.h"
 #include "../util/macro.h"
 using namespace std;
 using namespace ccpy::ast;
+using namespace ccpy::runtime;
 
+#define SEQ0() SeqVec {} \
+  .finish()
 #define SEQ1(A) SeqVec {} \
   .then([&]() { return A; }) \
   .finish()
@@ -69,7 +75,15 @@ struct Impl {
   vector<size_t> mod_stack;
   vector<NameScope> scope_stack;
 
+  static unordered_map<Str, Intrinsic> IntrinsicReverseMap;
+
   Impl() {
+    if(IntrinsicReverseMap.empty()) {
+      size_t idx = 0;
+      for(auto &c: IntrinsicNameMap)
+        IntrinsicReverseMap[c] = static_cast<Intrinsic>(idx++);
+    }
+
     this->push_scope(true);
   }
 
@@ -112,30 +126,43 @@ struct Impl {
     this->closure().hirs.push_back(std::move(hir));
   }
 
-  Local eval_imm(Immediate &&imm) {
+  Local eval(Immediate &&imm) {
     auto x = this->new_local();
     *this << HIRImm { x, move(imm) };
     return x;
   }
 
   Local eval_tuple(vector<Local> &&elems) {
-    vector<size_t> args;
+    vector<size_t> idxs;
     for(auto &c: elems)
-      args.push_back(c);
-    elems.clear();
+      idxs.push_back(c);
+    elems.clear(); // Release
 
     auto x = this->new_local();
-    *this << HIRTuple { x, args };
+    *this << HIRTuple { x, move(idxs) };
     return x;
   }
 
-  Local eval_call(Local &&fnargs) {
-    *this << HIRCall { fnargs, fnargs }; // Reuse
-    return move(fnargs);
+  Local eval_intrinsic_call(Intrinsic id, vector<Local> &&args) {
+    auto tup_args = this->eval_tuple(move(args));
+    // Reuse
+    *this << HIRIntrinsicCall { tup_args, static_cast<size_t>(id), tup_args };
+    return tup_args;
   }
 
-  Local eval_call(vector<Local> &&fnargs) {
-    return this->eval_call(this->eval_tuple(move(fnargs)));
+  Local eval_builtin_call(Str &&name, vector<Local> &&args) {
+    auto tup_args = this->eval_tuple(move(args));
+    return this->eval_intrinsic_call(Intrinsic::v_call2, SEQ2(
+      this->eval(ImmStr { move(name) }),
+      move(tup_args)
+    ));
+  }
+
+  Local eval_normal_call(Local &&fn, Local &&args) {
+    return this->eval_builtin_call("call", SEQ2(
+      move(fn),
+      move(args)
+    ));
   }
 
   Local eval_push_except(size_t label) {
@@ -145,27 +172,19 @@ struct Impl {
   }
 
   Local eval_name(const Str &name) {
-    // Hack for intrinsic names
-    Str intrinsic { "__intrinsic__" };
-    if(name.substr(0, intrinsic.length()) == intrinsic)
-      return this->eval_imm(ImmIntrinsic { name.substr(intrinsic.length()) });
-
     return match<Local>(this->scope().get(name)
     , [&](const NameLocal &kind) {
       return Local { kind.id };
     }
     , [&](const NameGlobal &) {
-      return this->eval_call(SEQ3(
-        this->eval_imm(ImmIntrinsic { "dict_get2" }),
-        this->eval_imm(ImmIntrinsic { "globals" }),
-        this->eval_imm(ImmStr { name })
+      return this->eval_builtin_call("global_get", SEQ1(
+        this->eval(ImmStr { name })
       ));
     }
     , [&](const NameCapture &kind) {
-      return this->eval_call(SEQ3(
-        this->eval_imm(ImmIntrinsic { "tuple_idx2" }),
-        this->eval_imm(ImmIntrinsic { "captures" }),
-        this->eval_imm(ImmInteger { Integer(kind.id) })
+      return this->eval_intrinsic_call(Intrinsic::tuple_idx2, SEQ2(
+        this->eval_intrinsic_call(Intrinsic::v_captured0, SEQ0()),
+        this->eval(ImmInteger { Integer(kind.id) })
       ));
     }
     );
@@ -179,67 +198,95 @@ struct Impl {
   void put(const Stmt &stmt) {
     match(stmt
     , [](const StmtPass &) {}
-    , [&](const StmtExpr &stmt) { this->eval_expr(stmt.expr); }
+    , [&](const StmtExpr &stmt) { this->eval(stmt.expr); }
     );
   }
 
-  Local eval_expr(const Expr &expr) {
-    return match<Local>(expr
-    , [&](const ExprName &expr) { return this->eval_name(expr.name); }
-    , [&](const ExprLiteral &expr) {
-      return match<Local>(expr.lit
-      , [&](const LitInteger &lit) {
-        return this->eval_imm(ImmInteger { lit.value });
-      }
-      , [&](const LitBool &lit) {
-        return this->eval_imm(ImmIntrinsic { lit.value ? "true" : "false" });
-      }
-      , [&](const LitEllipse &) {
-        return this->eval_imm(ImmIntrinsic { "ellipse" });
-      }
-      , [&](const LitNone &) {
-        return this->eval_imm(ImmIntrinsic { "none" });
-      }
-      );
+  Local eval(const Expr &expr) {
+    return match<Local>(expr, [&](const auto &expr) -> Local {
+      return this->eval(expr);
+    });
+  }
+
+  Local eval(const ExprName &expr) {
+    return this->eval_name(expr.name);
+  }
+
+  Local eval(const ExprLiteral &expr) {
+    return match<Local>(expr.lit
+    , [&](const LitInteger &lit) {
+      return this->eval(ImmInteger { lit.value });
     }
-    , [&](const ExprMember &expr) {
-      return this->eval_call(SEQ3(
-        this->eval_imm(ImmIntrinsic { "getattr2" }),
-        this->eval_expr(*expr.obj),
-        this->eval_imm(ImmStr { expr.member })
-      ));
+    , [&](const LitBool &lit) {
+      return this->eval(ImmBool { lit.value });
     }
-    , [&](const ExprCall &expr) {
-      vector<Local> fnargs;
-      fnargs.push_back(this->eval_expr(*expr.func));
-      for(auto &arg: expr.args)
-        fnargs.push_back(this->eval_expr(arg));
-      return this->eval_call(move(fnargs));
+    , [&](const LitEllipse &) {
+      return this->eval(ImmEllipse {});
     }
-    , [&](const ExprTuple &expr) {
-      vector<Local> elems;
-      for(auto &elem: expr.elems)
-        elems.push_back(this->eval_expr(elem));
-      return this->eval_tuple(move(elems));
-    }
-    , [&](const ExprUnary &expr) {
-      Str op_str { UnaryOpMap[static_cast<size_t>(expr.op)] };
-      return this->eval_call(SEQ2(
-        this->eval_name(op_str + "1"),
-        this->eval_expr(*expr.expr)
-      ));
-    }
-    , [&](const ExprBinary &expr) {
-      Str op_str { BinaryOpMap[static_cast<size_t>(expr.op)] };
-      return this->eval_call(SEQ3(
-        this->eval_name(op_str + "2"),
-        this->eval_expr(*expr.lexpr),
-        this->eval_expr(*expr.rexpr)
-      ));
+    , [&](const LitNone &) {
+      return this->eval(ImmNone {});
     }
     );
   }
+
+  Local eval(const ExprMember &expr) {
+    return this->eval_builtin_call("getattr", SEQ2(
+      this->eval(*expr.obj),
+      this->eval(ImmStr { expr.member })
+    ));
+  }
+
+  Local eval(const ExprCall &expr) {
+    // Hack intrinsic functions
+    optional<Intrinsic> intrinsic_id = {};
+    match(*expr.func
+    , [&](const ExprName &func) {
+      auto it = IntrinsicReverseMap.find(func.name);
+      if(it != IntrinsicReverseMap.end())
+        intrinsic_id = it->second;
+    }
+    , [](const auto &) {}
+    );
+
+    if(intrinsic_id) {
+      vector<Local> args;
+      for(auto &arg: expr.args)
+        args.push_back(this->eval(arg));
+      return this->eval_intrinsic_call(*intrinsic_id, move(args));
+    } else {
+      auto func = this->eval(*expr.func);
+      vector<Local> args;
+      for(auto &arg: expr.args)
+        args.push_back(this->eval(arg));
+      auto tup_args = this->eval_tuple(move(args));
+      return this->eval_normal_call(move(func), move(tup_args));
+    }
+  }
+
+  Local eval(const ExprTuple &expr) {
+    vector<Local> elems;
+    for(auto &elem: expr.elems)
+      elems.push_back(this->eval(elem));
+    return this->eval_tuple(move(elems));
+  }
+
+  Local eval(const ExprUnary &expr) {
+    Str op_str { UnaryOpMap[static_cast<size_t>(expr.op)] };
+    return this->eval_builtin_call(move(op_str), SEQ1(
+      this->eval(*expr.expr)
+    ));
+  }
+
+  Local eval(const ExprBinary &expr) {
+    Str op_str { BinaryOpMap[static_cast<size_t>(expr.op)] };
+    return this->eval_builtin_call(move(op_str), SEQ2(
+      this->eval(*expr.lexpr),
+      this->eval(*expr.rexpr)
+    ));
+  }
 };
+
+unordered_map<Str, Intrinsic> Impl::IntrinsicReverseMap;
 
 } // namespace anonymous
 
@@ -248,8 +295,8 @@ Module HIRGen::operator()(const vector<Stmt> &stmts) const {
     Impl t {};
     t << stmts;
     auto captured = t.pop_scope();
-    // if(!captured.empty())
-    //   throw HIRGenException { "Impossible: Global captures" };
+    if(!captured.empty())
+      throw HIRGenException { "Impossible: Global captures" };
     return move(t.mod);
   } catch(NameResolveException e) {
     throw HIRGenException { e.what() }; // Trans & rethrow
