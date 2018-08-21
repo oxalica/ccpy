@@ -1,0 +1,13 @@
+Start(Local size = 2):
+%0 = 233
+%0 = __intrinsic__int_to_str1(%0)
+%0 = __intrinsic__print1(%0)
+%0 = 114
+%0 = __intrinsic__int_to_str1(%0)
+%1 = 514
+%1 = __intrinsic__int_to_str1(%1)
+%0 = __intrinsic__str_concat2(%0, %1)
+%0 = __intrinsic__print1(%0)
+
+
+233114514Done

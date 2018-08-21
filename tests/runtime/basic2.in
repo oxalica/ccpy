@@ -1,0 +1,2 @@
+__intrinsic__print1(__intrinsic__int_to_str1(233))
+__intrinsic__print1(__intrinsic__str_concat2(__intrinsic__int_to_str1(114), __intrinsic__int_to_str1(514)))

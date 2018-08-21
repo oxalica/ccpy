@@ -15,15 +15,21 @@ struct Object;
 using ObjectRef = std::shared_ptr<Object>;
 using ObjectPlace = std::shared_ptr<ObjectRef>;
 
+using ObjectTuple = std::vector<ObjectRef>;
+using ObjectPool = std::vector<ObjectPlace>;
+
 using Dict = std::unordered_map<Str, ObjectRef>;
 
 #define PRIMITIVE_OBJ_LIST(F) \
   F(ObjBool, { bool value; }) \
   F(ObjInt, { Integer value; }) \
   F(ObjStr, { Str value; }) \
-  F(ObjTuple, { std::vector<ObjectRef> elems; }) \
+  F(ObjTuple, { ObjectTuple elems; }) \
   F(ObjDict, { Dict value; }) \
-  F(ObjClosure, { std::size_t id; std::vector<ObjectPlace> captured; }) \
+  F(ObjClosure, { \
+    std::size_t closure_id; \
+    std::shared_ptr<ObjectPool> captured; \
+  }) \
   F(ObjObject, {}) \
   F(ObjNull, {}) \
 
