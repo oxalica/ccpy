@@ -1,6 +1,7 @@
 #ifndef __CCPY_UTIL_ADT__
 #define __CCPY_UTIL_ADT__
 
+#include <exception>
 #include <optional>
 #include <type_traits>
 #include <utility>
@@ -11,7 +12,7 @@ namespace ccpy {
 namespace _impl {
 
 template<typename T>
-constexpr T quiet_declval() { return *static_cast<T *>(nullptr); }
+constexpr T quiet_declval() { throw std::exception {}; }
 
 template<>
 constexpr void quiet_declval<void>() {}
