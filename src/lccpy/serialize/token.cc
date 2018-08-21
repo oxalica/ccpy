@@ -14,7 +14,7 @@ namespace {
 Structual parened(Str name, Str value) {
   return Structual { StructParen {
     optional<Str> { move(name) },
-    vector<Structual> { StructValue { "\"" + move(value) + "\"" } }
+    vector<Structual> { StructStr { move(value) } }
   } };
 }
 
@@ -30,6 +30,9 @@ Structual trans(const Token &tok) {
   }
   , [&](const TokName &tok) {
     return parened("Name", tok.name);
+  }
+  , [&](const TokString &tok) {
+    return parened("String", tok.str);
   }
   , [&](const TokInteger &tok) {
     return parened("Integer", IntegerSerializer {}(tok.integer));

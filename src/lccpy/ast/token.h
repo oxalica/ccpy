@@ -39,6 +39,7 @@ DECL_REFL_ENUM(Symbol, SYMBOL_LIST)
   F(TokKeyword, { Keyword keyword; }) \
   F(TokSymbol, { Symbol symbol; }) \
   F(TokName, { Str name; }) \
+  F(TokString, { Str str; }) \
   F(TokInteger, { Integer integer; }) \
   F(TokIndent, {}) \
   F(TokDedent, {}) \

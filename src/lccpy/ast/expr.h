@@ -12,6 +12,7 @@ namespace ccpy::ast {
 #define LITERAL_LIST(F) \
   F(LitInteger, { Integer value; }) \
   F(LitBool, { bool value; }) \
+  F(LitStr, { Str value; }) \
   F(LitEllipse, {}) \
   F(LitNone, {}) \
 

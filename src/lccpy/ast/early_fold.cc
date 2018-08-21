@@ -44,6 +44,9 @@ static Literal fold_unary_lit(UnaryOp op, Literal &&x) {
       default: throw EarlyFoldException { "Invalid unary op for LitBool" };
     }
   }
+  , [&](LitStr &&) -> Literal {
+    throw EarlyFoldException { "Invalid unary op for LitStr" };
+  }
   , [&](LitNone &&) -> Literal {
     throw EarlyFoldException { "Invalid unary op for LitNone" };
   }
@@ -82,6 +85,17 @@ static Literal fold_binary_lit(BinaryOp op, Literal &&a, Literal &&b) {
     }
     , [](auto &&) -> Literal {
       throw EarlyFoldException { "Invalid binary op for LitBool" };
+    }
+    );
+  }
+  , [&](LitStr &&a) {
+    return match<Literal>(move(b)
+    , [&](LitStr &&b) -> Literal { // str .. str
+      a.value += b.value;
+      return a;
+    }
+    , [](auto &&) -> Literal {
+      throw EarlyFoldException { "Invalid binary op for LitStr" };
     }
     );
   }

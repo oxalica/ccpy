@@ -223,6 +223,9 @@ struct Impl {
     , [&](const LitBool &lit) {
       return this->eval(ImmBool { lit.value });
     }
+    , [&](const LitStr &lit) {
+      return this->eval(ImmStr { lit.value });
+    }
     , [&](const LitEllipse &) {
       return this->eval(ImmEllipse {});
     }
