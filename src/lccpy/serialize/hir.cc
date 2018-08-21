@@ -1,4 +1,5 @@
 #include "./hir.h"
+#include "./escape.h"
 #include "./number.h"
 using namespace std;
 using namespace ccpy::hir;
@@ -6,17 +7,6 @@ using namespace ccpy::hir;
 namespace ccpy::serialize {
 
 namespace {
-
-Str escape(const Str &s) {
-  Str ret = "\"";
-  for(auto c: s)
-    switch(c) {
-      case '"':  ret += "\\\""; break;
-      case '\\': ret += "\\\\"; break;
-      default:   ret += c;
-    }
-  return ret + "\"";
-}
 
 Str trans(const Integer &x) {
   return IntegerSerializer {}(x);
@@ -40,8 +30,10 @@ Str trans(const Immediate &imm) {
   return match<Str>(imm
   , [](const ImmInteger &imm) { return trans(imm.value); }
   , [](const ImmDecimal &imm) { return trans(imm.value); }
-  , [](const ImmStr &imm) { return escape(imm.value); }
-  , [](const ImmIntrinsic &imm) { return "Intrinsic " + escape(imm.name); }
+  , [](const ImmStr &imm) { return StringEscape {}(imm.value); }
+  , [](const ImmIntrinsic &imm) {
+    return "Intrinsic " + StringEscape {}(imm.name);
+  }
   );
 }
 

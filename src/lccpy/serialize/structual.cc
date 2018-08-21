@@ -1,5 +1,6 @@
 #include "./structual.h"
 #include <sstream>
+#include "./escape.h"
 #include "../util/adt.h"
 #include "../util/stream.h"
 #include "../util/stream_wrap.h"
@@ -30,14 +31,7 @@ struct Impl {
       *this << x.value;
     }
     , [&](const StructStr &x) {
-      *this << "\"";
-      for(char c: x.str)
-        switch(c) {
-          case '"': *this << "\\\""; break;
-          case '\\': *this << "\\\\"; break;
-          default: *this << c;
-        }
-      *this << "\"";
+      *this << StringEscape {}(x.str);
     }
     , [&](const StructParen &x) {
       if(x.name)
