@@ -39,10 +39,10 @@ namespace {
 
 struct Local {
   optional<NameScope &> scope;
-  size_t id;
+  LocalIdx id;
 
   explicit Local(NameScope &_scope): scope(_scope), id(_scope.new_local()) {}
-  explicit Local(size_t _id): scope({}), id(_id) {}
+  explicit Local(LocalIdx _id): scope({}), id(_id) {}
   Local(const Local &) = delete;
   Local(Local &&ri): scope(ri.scope), id(ri.id) { ri.scope = {}; }
   ~Local() {
@@ -50,7 +50,14 @@ struct Local {
       this->scope->del_local(this->id);
   }
 
-  operator size_t() const { return this->id; }
+  Local &operator=(const Local &) = delete;
+  Local &operator=(Local &&ri) {
+    this->scope = move(ri.scope);
+    this->id = ri.id;
+    return *this;
+  }
+
+  operator LocalIdx() const { return this->id; }
 };
 
 struct SeqVec {
@@ -132,30 +139,29 @@ struct Impl {
     return x;
   }
 
-  Local eval_tuple(vector<Local> &&elems) {
-    vector<size_t> idxs;
-    for(auto &c: elems)
-      idxs.push_back(c);
-    elems.clear(); // Release
+  Local eval_intrinsic_call(Intrinsic id, vector<Local> &&args) {
+    vector<LocalIdx> idxs;
+    for(auto &idx: args)
+      idxs.push_back(idx);
+    args.clear(); // Release
 
     auto x = this->new_local();
-    *this << HIRTuple { x, move(idxs) };
+    *this << HIRIntrinsicCall { x, static_cast<size_t>(id), move(idxs) };
     return x;
   }
 
-  Local eval_intrinsic_call(Intrinsic id, vector<Local> &&args) {
-    auto tup_args = this->eval_tuple(move(args));
-    // Reuse
-    *this << HIRIntrinsicCall { tup_args, static_cast<size_t>(id), tup_args };
-    return tup_args;
+  Local eval_builtin_call(Str &&name, vector<Local> &&args) {
+    auto fn = this->eval_intrinsic_call(Intrinsic::dict_get3, SEQ3(
+      this->eval_intrinsic_call(Intrinsic::get_global0, SEQ0()),
+      this->eval(ImmStr { "__builtin__" + name }),
+      this->new_local()
+    ));
+    args.insert(args.cbegin(), move(fn));
+    return this->eval_intrinsic_call(Intrinsic::v_call_, move(args));
   }
 
-  Local eval_builtin_call(Str &&name, vector<Local> &&args) {
-    auto tup_args = this->eval_tuple(move(args));
-    return this->eval_intrinsic_call(Intrinsic::v_call2, SEQ2(
-      this->eval(ImmStr { move(name) }),
-      move(tup_args)
-    ));
+  Local eval_tuple(vector<Local> &&elems) {
+    return this->eval_intrinsic_call(Intrinsic::tuple_make_, move(elems));
   }
 
   Local eval_normal_call(Local &&fn, Local &&args) {
@@ -174,7 +180,7 @@ struct Impl {
   Local eval_name(const Str &name) {
     return match<Local>(this->scope().get(name)
     , [&](const NameLocal &kind) {
-      return Local { kind.id };
+      return Local { LocalIdx(kind.id) };
     }
     , [&](const NameGlobal &) {
       return this->eval_builtin_call("global_get", SEQ1(
@@ -182,10 +188,7 @@ struct Impl {
       ));
     }
     , [&](const NameCapture &kind) {
-      return this->eval_intrinsic_call(Intrinsic::tuple_idx2, SEQ2(
-        this->eval_intrinsic_call(Intrinsic::v_captured0, SEQ0()),
-        this->eval(ImmInteger { Integer(kind.id) })
-      ));
+      return Local { -1 - LocalIdx(kind.id) };
     }
     );
   }

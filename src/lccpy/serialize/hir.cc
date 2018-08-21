@@ -10,12 +10,8 @@ namespace ccpy::serialize {
 
 namespace {
 
-Str trans(const Integer &x) {
+Str trans(const Integer &x) { // The same as LocalIdx
   return IntegerSerializer {}(x);
-}
-
-Str trans(size_t x) {
-  return trans(Integer(x));
 }
 
 Str trans(const Immediate &imm) {
@@ -28,33 +24,33 @@ Str trans(const Immediate &imm) {
   );
 }
 
+Str trans(const vector<LocalIdx> &idxs) {
+  Str ret;
+  bool fst = true;
+  for(auto idx: idxs) {
+    if(fst)
+      fst = false;
+    else
+      ret += ", ";
+    ret += "%" + trans(idx);
+  }
+  return ret;
+}
+
 Str trans(const HIR &hir) {
   return match<Str>(hir
   , [](const HIRImm &hir) {
     return "%" + trans(hir.dest) + " = " + trans(hir.imm);
-  }
-  , [](const HIRTuple &hir) {
-    Str ret = "%" + trans(hir.dest) + " = Tuple#" + trans(hir.elems.size());
-    ret += "[";
-    bool fst = true;
-    for(auto c: hir.elems) {
-      if(fst)
-        fst = false;
-      else
-        ret += ", ";
-      ret += "%" + trans(c);
-    }
-    ret += "]";
-    return ret;
   }
   , [](const HIRClosure &hir) {
     return "%" + trans(hir.dest) + " = Closure #" + trans(hir.closure_id)
       + "(" + trans(hir.captured) + ")";
   }
   , [](const HIRIntrinsicCall &hir) {
+    auto id = static_cast<size_t>(hir.intrinsic_id);
     return "%" + trans(hir.dest) + " = " +
-      IntrinsicNameMap[static_cast<size_t>(hir.intrinsic_id)] +
-      "(%" + trans(hir.args) + ")";
+      (id < INTRINSIC_COUNT ? IntrinsicNameMap[id] : "?") +
+      "(" + trans(hir.args) + ")";
   }
   , [](const HIRJF &hir) {
     return "JmpIfFalse %" + trans(hir.cond)

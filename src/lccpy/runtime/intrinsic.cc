@@ -38,18 +38,25 @@ IntrinsicFunc const IntrinsicMod::*IntrinsicMethodMap[INTRINSIC_COUNT] = {
   INTRINSIC_LIST(INTRINSIC_METHOD)
 };
 
+IntrinsicMod::IntrinsicMod(std::istream &_in, std::ostream &_out)
+  : in(_in)
+  , out(_out)
+  , global(new_obj(ObjDict { {} }))
+  , true_(new_obj(ObjBool { true }))
+  , false_(new_obj(ObjBool { false }))
+  , none(new_obj(ObjObject {}))
+  , ellipse(new_obj(ObjObject {}))
+  {}
+
 #define SIG(NAME) ObjectRef IntrinsicMod::NAME(const ObjectRef &_args)
 #define ARGS(NAME, N) \
   auto &args = expect<ObjTuple>(_args, "Invalid args for " #NAME).elems; \
   if(args.size() != N) \
     throw IntrinsicException { "Invalid args length for" #NAME };
 
-SIG(v_call2) { ARGS(v_call2, 2)
-  throw IntrinsicException { "Call to virtual intrinsic v_call2" };
-}
-
-SIG(v_captured0) { ARGS(v_captured0, 0)
-  throw IntrinsicException { "Call to virtual intrinsic v_captured0" };
+SIG(v_call_) {
+  (void)_args; // Suppress warning
+  throw IntrinsicException { "Call to virtual intrinsic v_call_" };
 }
 
 SIG(v_args0) { ARGS(v_args0, 0)
@@ -78,6 +85,10 @@ SIG(setattr3) { ARGS(setattr3, 3)
   auto &name = expect<ObjStr>(args[1], "Wrong name type for setattr3").value;
   args[1]->attrs.insert_or_assign(name, args[2]);
   return this->none;
+}
+
+SIG(tuple_make_) {
+  return _args;
 }
 
 SIG(tuple_len1) { ARGS(tuple_len1, 1)

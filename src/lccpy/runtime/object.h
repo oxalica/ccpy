@@ -13,6 +13,7 @@ namespace ccpy::runtime {
 struct Object;
 
 using ObjectRef = std::shared_ptr<Object>;
+using ObjectPlace = std::shared_ptr<ObjectRef>;
 
 using Dict = std::unordered_map<Str, ObjectRef>;
 
@@ -22,7 +23,7 @@ using Dict = std::unordered_map<Str, ObjectRef>;
   F(ObjStr, { Str value; }) \
   F(ObjTuple, { std::vector<ObjectRef> elems; }) \
   F(ObjDict, { Dict value; }) \
-  F(ObjClosure, { std::size_t id; ObjectRef captured; }) \
+  F(ObjClosure, { std::size_t id; std::vector<ObjectPlace> captured; }) \
   F(ObjObject, {}) \
   F(ObjNull, {}) \
 

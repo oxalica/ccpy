@@ -5,3 +5,4 @@ f((), x, -y.z, (None,))
 __intrinsic__wtf()      # Unrecognize. Normal call.
 __intrinsic__id1(42)    # Intrinsic call.
 __intrinsic__id1        # Not call.
+f(1)(2)(3)

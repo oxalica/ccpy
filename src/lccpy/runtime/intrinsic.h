@@ -9,14 +9,14 @@
 namespace ccpy::runtime {
 
 #define INTRINSIC_LIST(F) \
-  F(2, v_call) \
-  F(0, v_captured) \
+  F(_, v_call) \
   F(0, v_args) \
   F(0, get_global) \
   F(2, is) \
   F(1, id) \
   F(3, getattr) \
   F(3, setattr) \
+  F(_, tuple_make) \
   F(1, tuple_len) \
   F(2, tuple_idx) \
   F(2, tuple_concat) \
@@ -48,11 +48,14 @@ enum class Intrinsic {
 
 using IntrinsicFunc = ObjectRef (const ObjectRef &);
 
-struct IntrinsicMod {
+struct IntrinsicMod { // Public struct
   std::istream &in;
   std::ostream &out;
 
-  ObjectRef global, true_, false_, none;
+  ObjectRef global;
+  ObjectRef true_, false_, none, ellipse;
+
+  IntrinsicMod(std::istream &, std::ostream &);
 
 #define DECL_INTRINSIC_METHOD(NARG, NAME) IntrinsicFunc NAME ## NARG;
 

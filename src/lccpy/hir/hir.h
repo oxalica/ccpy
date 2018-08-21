@@ -18,15 +18,24 @@ namespace ccpy::hir {
 
 DECL_TAGGED_UNION(Immediate, HIR_IMMEDIATE_LIST)
 
+using LocalIdx = std::ptrdiff_t;
+
 #define HIR_LIST(F) \
-  F(HIRImm, { std::size_t dest; Immediate imm; }) \
-  F(HIRClosure, { std::size_t dest, closure_id, captured; }) \
-  F(HIRTuple, { std::size_t dest; std::vector<std::size_t> elems; }) \
-  F(HIRIntrinsicCall, { std::size_t dest, intrinsic_id, args; }) \
-  F(HIRJF, { std::size_t cond; std::size_t target; }) /* Jump if False */ \
-  F(HIRReturn, { std::size_t value; }) \
-  F(HIRRaise, { std::size_t value; }) \
-  F(HIRPushExcept, { std::size_t dest, target; }) \
+  F(HIRImm, { LocalIdx dest; Immediate imm; }) \
+  F(HIRClosure, { \
+    LocalIdx dest; \
+    std::size_t closure_id; \
+    std::vector<LocalIdx> captured; \
+  }) \
+  F(HIRIntrinsicCall, { \
+    LocalIdx dest; \
+    std::size_t intrinsic_id; \
+    std::vector<LocalIdx> args; \
+  }) \
+  F(HIRJF, { LocalIdx cond; std::size_t target; }) /* Jump if False */ \
+  F(HIRReturn, { LocalIdx value; }) \
+  F(HIRRaise, { LocalIdx value; }) \
+  F(HIRPushExcept, { LocalIdx dest; std::size_t target; }) \
   F(HIRPopExcept, {}) \
 
 DECL_TAGGED_UNION(HIR, HIR_LIST)
