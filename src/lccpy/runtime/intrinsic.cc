@@ -3,7 +3,9 @@
 #include <sstream>
 #include "../util/adt.h"
 #include "../serialize/number.h"
+#include "../serialize/runtime.h"
 using namespace std;
+using namespace ccpy::serialize;
 
 namespace ccpy::runtime {
 
@@ -54,9 +56,12 @@ IntrinsicMod::IntrinsicMod(std::istream &_in, std::ostream &_out)
   if(args.size() != N) \
     throw IntrinsicException { "Invalid args length for" #NAME };
 
-SIG(v_call_) {
-  (void)_args; // Suppress warning
-  throw IntrinsicException { "Call to virtual intrinsic v_call_" };
+SIG(v_call2) { ARGS(v_call2, 2)
+  throw IntrinsicException { "Call to virtual intrinsic v_call2" };
+}
+
+SIG(v_defaults0) { ARGS(v_defaults0, 0)
+  throw IntrinsicException { "Call to virtual intrinsic v_defaults0" };
 }
 
 SIG(v_args0) { ARGS(v_args0, 0)
@@ -77,6 +82,11 @@ SIG(is2) { ARGS(is2, 2)
 
 SIG(id1) { ARGS(id1, 1)
   return new_obj(ObjInt { Integer(args[0].get()) });
+}
+
+SIG(repr1) { ARGS(repr1, 1)
+  auto s = ObjectSerializer {}(args[0]);
+  return new_obj(ObjStr { move(s) });
 }
 
 SIG(getattr3) { ARGS(getattr3, 3)
@@ -157,21 +167,34 @@ SIG(tuple_splice4) { ARGS(tuple_splice4, 4)
 
 SIG(tuple_slice4) { ARGS(tuple_slice4, 4)
   auto &tup =
-    expect<ObjTuple>(args[0], "Wrong string type for tuple_slice4").elems;
-  auto &l = expect<ObjInt>(args[1], "Wrong l type for tuple_slice4").value;
-  auto &r = expect<ObjInt>(args[2], "Wrong r type for tuple_slice4").value;
-  auto &step = expect<ObjInt>(args[3], "Wrong step type for tuple_slice4").value;
+    expect<ObjTuple>(args[0], "Wrong tuple type for tuple_slice4").elems;
+
+  Integer l, r, step, len = Integer(tup.size());
+  if(args[3].get() == this->none.get())
+    step = 1;
+  else
+    step = expect<ObjInt>(args[3], "Wrong step type for tuple_slice4").value;
   if(step == 0)
     throw IntrinsicException { "tuple_slice4 got zero step" };
+
+  if(args[1].get() == this->none.get())
+    l = (step > 0 ? 0 : len - 1);
+  else
+    l = expect<ObjInt>(args[1], "Wrong l type for tuple_slice4").value;
+
+  if(args[2].get() == this->none.get())
+    r = (step > 0 ? len : -1);
+  else
+    r = expect<ObjInt>(args[2], "Wrong r type for tuple_slice4").value;
+
   ObjectTuple ret;
-  auto len = Integer(tup.size());
   if(step > 0)
     for(auto i = max(l, Integer { 0 }); i < len && i < r; i += step)
       ret.push_back(tup[i]);
   else
     for(auto i = min(l, len - 1); i >= 0 && i > r; i += step)
       ret.push_back(tup[i]);
-  return new_obj(ObjTuple { move(tup) });
+  return new_obj(ObjTuple { move(ret) });
 }
 
 #define IMPL_INT_OP(NAME, OP, TEST) \
@@ -208,26 +231,40 @@ SIG(int_eq2) { ARGS(int_eq2, 2)
 
 SIG(int_to_str1) { ARGS(int_to_str1, 1)
   auto &a = expect<ObjInt>(args[0], "Wrong int type for int_to_str1").value;
-  auto s = serialize::IntegerSerializer {}(a);
+  auto s = IntegerSerializer {}(a);
   return new_obj(ObjStr { move(s) });
 }
 
 SIG(str_slice4) { ARGS(str_slice4, 4)
-  auto &s = expect<ObjStr>(args[0], "Wrong string type for str_slice4").value;
-  auto &l = expect<ObjInt>(args[1], "Wrong l type for str_slice4").value;
-  auto &r = expect<ObjInt>(args[2], "Wrong r type for str_slice4").value;
-  auto &step = expect<ObjInt>(args[3], "Wrong step type for str_slice4").value;
+  auto &str =
+    expect<ObjStr>(args[0], "Wrong string type for str_slice4").value;
+
+  Integer l, r, step, len = Integer(str.length());
+  if(args[3].get() == this->none.get())
+    step = 1;
+  else
+    step = expect<ObjInt>(args[3], "Wrong step type for str_slice4").value;
   if(step == 0)
-    throw IntrinsicException { "str_slice4 got zero step" };
+    throw IntrinsicException { " str_slice4got zero step" };
+
+  if(args[1].get() == this->none.get())
+    l = (step > 0 ? 0 : len - 1);
+  else
+    l = expect<ObjInt>(args[1], "Wrong l type for str_slice4").value;
+
+  if(args[2].get() == this->none.get())
+    r = (step > 0 ? len : -1);
+  else
+    r = expect<ObjInt>(args[2], "Wrong r type for str_slice4").value;
+
   Str ret;
-  auto len = Integer(s.length());
   if(step > 0)
     for(auto i = max(l, Integer { 0 }); i < len && i < r; i += step)
-      ret.push_back(s[i]);
+      ret.push_back(str[i]);
   else
     for(auto i = min(l, len - 1); i >= 0 && i > r; i += step)
-      ret.push_back(s[i]);
-  return new_obj(ObjStr { move(s) });
+      ret.push_back(str[i]);
+  return new_obj(ObjStr { move(ret) });
 }
 
 SIG(str_to_ord1) { ARGS(str_to_ord1, 1)

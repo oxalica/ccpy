@@ -29,6 +29,7 @@ using Dict = std::unordered_map<Str, ObjectRef>;
   F(ObjClosure, { \
     std::size_t closure_id; \
     std::shared_ptr<ObjectPool> captured; \
+    ObjectRef defaults; \
   }) \
   F(ObjObject, {}) \
   F(ObjNull, {}) \

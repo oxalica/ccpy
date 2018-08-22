@@ -1,0 +1,56 @@
+def __builtin__global_get(name):
+  g = __intrinsic__get_global0()
+  return __intrinsic__dict_get3(g, name, None)
+
+def __builtin__call(f, args):
+  return __intrinsic__v_call2(f, args)
+
+def __builtin__add(a, b):
+  return __intrinsic__str_concat2(a, b)
+
+def __builtin__index(obj, idx):
+  return __intrinsic__tuple_idx2(obj, idx)
+
+
+def print_s(s=''):
+  s = s + '\n'
+  __intrinsic__print1(s)
+  return 233
+
+def print(*xs):
+  print_s(repr(xs))
+
+def repr(obj):
+  return __intrinsic__repr1(obj)
+
+def f():
+  def g(a=()):
+    __intrinsic__tuple_splice4(a, 0, 0, (1,))
+    return a
+  return g
+
+def g(a="a", *b): print(a, b)
+
+ret = print_s('Hello, world!')
+print_s('ret = ' + repr(ret))
+print_s()
+
+a = b = 1
+print(a, b)
+b = a, b
+print(a, b)
+a, b = b, a
+print(a, b)
+print_s()
+
+g()
+g('Hello')
+g('Hello', 'world')
+g('Hello', 'cruel', 'world')
+print_s()
+
+a = f()
+b = f()
+print(a(), a())
+print(b())
+print(a())

@@ -27,6 +27,7 @@ using LocalIdx = std::ptrdiff_t;
     LocalIdx dest; \
     std::size_t closure_id; \
     std::vector<LocalIdx> captured; \
+    LocalIdx defaults; \
   }) \
   F(HIRIntrinsicCall, { \
     LocalIdx dest; \

@@ -23,7 +23,7 @@ struct HIRRunner::Impl {
     size_t ip;
 
     shared_ptr<ObjectPool> locals, captured;
-    ObjectRef args;
+    ObjectRef args, defaults;
   };
 
   struct FrameInfo {
@@ -55,7 +55,7 @@ struct HIRRunner::Impl {
         throw HIRRuntimeException { "Local access out of range" };
       return locals[id];
     } else {
-      id = -id;
+      id = ~id;
       auto &captured = *this->context.captured;
       if(size_t(id) >= captured.size())
         throw HIRRuntimeException { "Captured access out of range" };
@@ -66,7 +66,7 @@ struct HIRRunner::Impl {
   const HIR &hir(size_t ip) {
     auto &hirs = this->mod.closures[this->context.closure_id].hirs; // Checked
     if(ip >= hirs.size())
-      throw HIRRuntimeException { "Invalid target ptr" };
+      throw HIRRuntimeException { "Invalid ip ptr" };
     return hirs[ip];
   }
 
@@ -91,7 +91,8 @@ struct HIRRunner::Impl {
     size_t closure_id,
     size_t local_size,
     shared_ptr<ObjectPool> captured,
-    ObjectRef &&args
+    ObjectRef &&args,
+    const ObjectRef &defaults
   ) {
     this->frames.push_back(Frame {
       FrameInfo { false, dest },
@@ -104,6 +105,7 @@ struct HIRRunner::Impl {
       this->make_obj_pool(local_size),
       captured,
       move(args),
+      defaults,
     };
   }
 
@@ -124,6 +126,7 @@ struct HIRRunner::Impl {
 
       this->make_obj_pool(this->mod.closures[0].local_size),
       this->make_obj_pool(0),
+      new_obj(ObjTuple { {} }),
       new_obj(ObjTuple { {} }),
     };
     for(; !this->is_ended(); ++this->context.ip)
@@ -160,9 +163,11 @@ struct HIRRunner::Impl {
     vector<ObjectPlace> captured;
     for(LocalIdx id: hir.captured)
       captured.push_back(this->local(id));
+    auto defaults = *this->local(hir.defaults);
     *this->local(hir.dest) = new_obj(ObjClosure {
       hir.closure_id,
       make_shared<ObjectPool>(move(captured)),
+      defaults,
     });
   }
 
@@ -172,28 +177,36 @@ struct HIRRunner::Impl {
         *this->local(hir.dest) = this->context.args;
         break;
 
-      case Intrinsic::v_call_: {
-        if(hir.args.empty())
-          throw HIRRuntimeException { "v_call_ have no `func` argument" };
+      case Intrinsic::v_defaults0:
+        *this->local(hir.dest) = this->context.defaults;
+        break;
+
+      case Intrinsic::v_call2: {
+        if(hir.args.size() != 2)
+          throw HIRRuntimeException { "v_call2 should have 2 args" };
 
         auto fn = *this->local(hir.args[0]);
-        match(fn->primitive
-        , [&](const ObjClosure &fn) {
-          ObjectTuple args;
-          for(size_t i = 1; i < hir.args.size(); ++i)
-            args.push_back(*this->local(hir.args[i]));
-
-          this->push_return_frame(
-            hir.dest,
-            fn.closure_id,
-            this->mod.closures[fn.closure_id].local_size, // Checked
-            fn.captured,
-            new_obj(ObjTuple { move(args) })
-          );
+        auto args = *this->local(hir.args[1]);
+        auto fn_ = match<const ObjClosure &>(fn->primitive
+        , [&](const ObjClosure &fn) -> const ObjClosure & { return fn; }
+        , [](const auto &) -> const ObjClosure & {
+          throw HIRRuntimeException { "v_call_ `fn` requires a closure" };
         }
+        );
+        match(args->primitive
+        , [](const ObjTuple &) {}
         , [](const auto &) {
-          throw HIRRuntimeException { "v_call_ requires a function" };
+          throw HIRRuntimeException { "v_call_ `args` requires a tuple" };
         }
+        );
+
+        this->push_return_frame(
+          hir.dest,
+          fn_.closure_id,
+          this->mod.closures[fn_.closure_id].local_size, // Checked
+          fn_.captured,
+          move(args),
+          fn_.defaults
         );
         break;
       }
@@ -214,7 +227,7 @@ struct HIRRunner::Impl {
   }
 
   void exec(const HIRJF &hir) {
-    if(this->local(hir.target)->get() == this->intrinsic.false_.get())
+    if(this->local(hir.cond)->get() == this->intrinsic.false_.get())
       this->context.ip = hir.target - 1;
   }
 

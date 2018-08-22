@@ -9,12 +9,14 @@
 namespace ccpy::runtime {
 
 #define INTRINSIC_LIST(F) \
-  F(_, v_call) \
+  F(2, v_call) \
   F(0, v_args) \
+  F(0, v_defaults) \
   F(1, v_del) \
   F(0, get_global) \
   F(2, is) \
   F(1, id) \
+  F(1, repr) \
   F(3, getattr) \
   F(3, setattr) \
   F(2, delattr) \

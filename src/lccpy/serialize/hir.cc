@@ -47,7 +47,8 @@ Str trans(const HIR &hir) {
   }
   , [](const HIRClosure &hir) {
     return "%" + trans(hir.dest) + " = Closure #" + trans(hir.closure_id)
-      + "(" + trans(hir.captured) + ")";
+      + "(" + trans(hir.captured) + ")"
+      + " defaults = %" + trans(hir.defaults);
   }
   , [](const HIRIntrinsicCall &hir) {
     auto id = static_cast<size_t>(hir.intrinsic_id);

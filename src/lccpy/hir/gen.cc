@@ -161,10 +161,12 @@ struct Impl {
     auto fn = this->eval_intrinsic_call(Intrinsic::dict_get3, SEQ3(
       this->eval_intrinsic_call(Intrinsic::get_global0, SEQ0()),
       this->eval(ImmStr { "__builtin__" + name }),
-      this->new_local()
+      this->eval(ImmNone {})
     ));
-    args.insert(args.cbegin(), move(fn));
-    return this->eval_intrinsic_call(Intrinsic::v_call_, move(args));
+    return this->eval_intrinsic_call(Intrinsic::v_call2, SEQ2(
+      move(fn),
+      this->eval_tuple(move(args))
+    ));
   }
 
   Local eval_tuple(vector<Local> &&elems) {
@@ -201,7 +203,7 @@ struct Impl {
     }
     , [&](const NameGlobal &) { }
     , [&](const NameCapture &kind) {
-      ret = Local { -1 - LocalIdx(kind.id) };
+      ret = Local { ~LocalIdx(kind.id) };
     }
     );
     return ret;
@@ -279,7 +281,7 @@ struct Impl {
     , [&](const PatTuple &pat) {
       size_t idx = 0;
       for(auto &p: pat.pats) {
-        auto c = this->eval_builtin_call("index2", SEQ2(
+        auto c = this->eval_builtin_call("index", SEQ2(
           move(value),
           this->eval(ImmInteger { Integer(idx++) })
         ));
@@ -287,14 +289,14 @@ struct Impl {
       }
     }
     , [&](const PatAttr &pat) {
-      this->eval_builtin_call("setattr3", SEQ3(
+      this->eval_builtin_call("setattr", SEQ3(
         this->eval(pat.expr),
         this->eval(ImmStr { pat.name }),
         move(value)
       ));
     }
     , [&](const PatIndex &pat) {
-      this->eval_builtin_call("setitem3", SEQ3(
+      this->eval_builtin_call("setitem", SEQ3(
         this->eval(pat.expr),
         this->eval(pat.idx),
         move(value)
@@ -322,13 +324,13 @@ struct Impl {
         this->pat_del(p);
     }
     , [&](const PatAttr &pat) {
-      this->eval_builtin_call("delattr2", SEQ2(
+      this->eval_builtin_call("delattr", SEQ2(
         this->eval(pat.expr),
         this->eval(ImmStr { pat.name })
       ));
     }
     , [&](const PatIndex &pat) {
-      this->eval_builtin_call("delitem2", SEQ2(
+      this->eval_builtin_call("delitem", SEQ2(
         this->eval(pat.expr),
         this->eval(pat.idx)
       ));
@@ -363,9 +365,17 @@ struct Impl {
 
     this->load_args(stmt.args, stmt.rest_args);
     this->run_stmts(stmt.body);
+    this->run(StmtReturn { {} }); // Return None at the end
 
     auto name_captured = this->pop_scope();
-    vector<Local> local_captured;
+
+    vector<Local> defaults; // Eval defaults first
+    for(auto &arg: stmt.args)
+      if(arg.default_)
+        defaults.push_back(this->eval(*arg.default_));
+    auto tup_defaults = this->eval_tuple(move(defaults));
+
+    vector<Local> local_captured; // Get captured
     vector<LocalIdx> idx_captured;
     for(auto &name: name_captured) {
       auto var = this->eval_name(name);
@@ -374,20 +384,14 @@ struct Impl {
     }
 
     local_captured.clear(); // Now release
-    auto f = this->new_local();
-    *this << HIRClosure { f, closure_id, move(idx_captured) };
+    *this << HIRClosure {
+      tup_defaults, // Reuse
+      closure_id,
+      move(idx_captured),
+      tup_defaults,
+    };
 
-    vector<Local> defaults;
-    for(auto &arg: stmt.args)
-      if(arg.default_)
-        defaults.push_back(this->eval(*arg.default_));
-    auto tup_defaults = this->eval_tuple(move(defaults));
-    this->eval_intrinsic_call(Intrinsic::setattr3, SEQ3(
-      Local { f.id }, // Borrow
-      this->eval(ImmStr { "__defaults__" }),
-      move(tup_defaults)
-    ));
-    this->pat_store(PatName { stmt.name }, move(f));
+    this->pat_store(PatName { stmt.name }, move(tup_defaults));
   }
 
   void load_args(const vector<FuncArg> &args, const optional<Str> &rest_args) {
@@ -423,7 +427,7 @@ struct Impl {
           return f_get_arg(idx);
         }, [&]() { // Load default
           return this->eval_intrinsic_call(Intrinsic::tuple_idx2, SEQ2(
-            Local { real_args.id }, // Borrow
+            this->eval_intrinsic_call(Intrinsic::v_defaults0, SEQ0()),
             this->eval(ImmInteger { Integer(idx_default++) })
           ));
         });
