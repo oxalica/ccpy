@@ -19,12 +19,12 @@ namespace ccpy::ast {
 DECL_TAGGED_UNION(Literal, LITERAL_LIST)
 
 #define UNARY_OP_LIST(F) \
-  F(Pos, "+") F(Neg, "-") F(Not, "~") \
+  F(Pos, "pos") F(Neg, "neg") F(Inv, "inv") \
 
 DECL_REFL_ENUM(UnaryOp, UNARY_OP_LIST)
 
 #define BINARY_OP_LIST(F) \
-  F(Add, "+") F(Sub, "-") F(Mul, "*") F(Div, "/") F(Mod, "%") \
+  F(Add, "add") F(Sub, "sub") F(Mul, "mul") F(Div, "div") F(Mod, "mod") \
 
 DECL_REFL_ENUM(BinaryOp, BINARY_OP_LIST)
 

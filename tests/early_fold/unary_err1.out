@@ -1,2 +1,2 @@
-StmtExpr(ExprUnary("-", ExprLiteral(LitEllipse)))
+StmtExpr(ExprUnary("neg", ExprLiteral(LitEllipse)))
 Fold error: Invalid unary op for LitEllipse

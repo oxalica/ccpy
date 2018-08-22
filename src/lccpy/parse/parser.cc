@@ -29,7 +29,7 @@ bool is_expr_begin(OptTokRef tok) {
   , [](const TokSymbol &tok) {
     switch(tok.symbol) {
       case Symbol::DotDotDot: // `...`
-      case Symbol::Not: case Symbol::Add: case Symbol::Sub: // Unary op
+      case Symbol::Inv: case Symbol::Add: case Symbol::Sub: // Unary op
       case Symbol::LParen: // Group or tuple
         return true;
       default:
@@ -184,8 +184,8 @@ struct Parser::Impl {
       op = UnaryOp::Pos;
     else if(is_symbol(*tok, Symbol::Sub))
       op = UnaryOp::Neg;
-    else if(is_symbol(*tok, Symbol::Not))
-      op = UnaryOp::Not;
+    else if(is_symbol(*tok, Symbol::Inv))
+      op = UnaryOp::Inv;
     else
       return this->get_expr_atom();
 

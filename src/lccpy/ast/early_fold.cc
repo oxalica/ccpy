@@ -33,14 +33,14 @@ static Literal fold_unary_lit(UnaryOp op, Literal &&x) {
     switch(op) {
       case UnaryOp::Pos: break;
       case UnaryOp::Neg: x.value = -move(x.value); break;
-      case UnaryOp::Not: x.value = ~move(x.value); break;
+      case UnaryOp::Inv: x.value = ~move(x.value); break;
       default: throw EarlyFoldException { "Invalid unary op for LitInteger" };
     }
     return move(x);
   }
   , [&](LitBool &&x) {
     switch(op) {
-      case UnaryOp::Not: return LitBool { !x.value };
+      case UnaryOp::Inv: return LitBool { !x.value };
       default: throw EarlyFoldException { "Invalid unary op for LitBool" };
     }
   }

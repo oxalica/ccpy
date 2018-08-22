@@ -1,2 +1,2 @@
-StmtExpr(ExprBinary("+", ExprLiteral(LitInteger(1)), ExprLiteral(LitEllipse)))
+StmtExpr(ExprBinary("add", ExprLiteral(LitInteger(1)), ExprLiteral(LitEllipse)))
 Fold error: Invalid binary op for LitInteger

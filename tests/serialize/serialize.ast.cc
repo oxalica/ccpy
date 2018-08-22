@@ -40,7 +40,7 @@ int main() {
           BinaryOp::Add,
           ExprLiteral { LitBool { true } },
           ExprUnary {
-            UnaryOp::Not,
+            UnaryOp::Inv,
             ExprLiteral { LitInteger { 1 } },
           },
         } },

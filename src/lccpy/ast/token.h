@@ -30,7 +30,7 @@ DECL_REFL_ENUM(Keyword, KEYWORD_LIST)
   F(Comma, ",") F(Colon, ":") F(SemiColon, ";") \
   F(Dot, ".") F(DotDotDot, "...") \
   F(LParen, "(") F(RParen, ")") \
-  F(Not, "~") \
+  F(Inv, "~") \
   F(Add, "+") F(Sub, "-") F(Mul, "*") F(Div, "/") F(Mod, "%")
 
 DECL_REFL_ENUM(Symbol, SYMBOL_LIST)
