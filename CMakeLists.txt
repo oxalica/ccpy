@@ -43,5 +43,5 @@ endforeach()
 
 file(WRITE "${PROJECT_BINARY_DIR}/test_list.txt" ${TEST_LIST})
 
-add_executable(test src/test.cc)
-# target_link_libraries(test lccpy)
+add_executable(test_runner src/test.cc)
+# target_link_libraries(test_runner lccpy)
