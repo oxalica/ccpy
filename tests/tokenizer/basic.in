@@ -4,3 +4,4 @@ True False None
 '123' "2
 34"
 'a\n"b\'' "\"3'9\\"
+a = b = c

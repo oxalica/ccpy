@@ -22,4 +22,10 @@ Newline
 String("a\n\"b'")
 String("\"3'9\\")
 Newline
+Name("a")
+Symbol("=")
+Name("b")
+Symbol("=")
+Name("c")
+Newline
 End

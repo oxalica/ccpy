@@ -12,16 +12,15 @@ struct Span {
 };
 
 #define KEYWORD_LIST(F) \
-  F(Del, "del") \
   F(Pass, "pass") \
-  F(Break, "break") \
-  F(Continue, "continue") \
-  F(Return, "return") \
-  F(From, "from") F(Import, "import") F(As, "as") \
+  F(Del, "del") \
+  F(Def, "def") F(Return, "return") F(Yield, "yield") \
+  F(Try, "try") F(Except, "except") F(Raise, "raise") \
+  F(Global, "global") F(Nonlocal, "nonlocal") \
   F(If, "if") F(Elif, "elif") F(Else, "else") \
-  F(For, "for") \
+  F(While, "while") F(For, "for") \
+  F(Break, "break") F(Continue, "continue") \
   F(In, "in") \
-  F(Def, "def") \
   F(True, "True") F(False, "False") F(None, "None") \
 
 DECL_REFL_ENUM(Keyword, KEYWORD_LIST)
@@ -30,6 +29,8 @@ DECL_REFL_ENUM(Keyword, KEYWORD_LIST)
   F(Comma, ",") F(Colon, ":") F(SemiColon, ";") \
   F(Dot, ".") F(DotDotDot, "...") \
   F(LParen, "(") F(RParen, ")") \
+  F(LBracket, "[") F(RBracket, "]") \
+  F(Eq, "=") \
   F(Inv, "~") \
   F(Add, "+") F(Sub, "-") F(Mul, "*") F(Div, "/") F(Mod, "%")
 

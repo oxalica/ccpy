@@ -1,0 +1,46 @@
+; A subset of Python 3 (https://docs.python.org/3/reference/grammar.html)
+; Note that codes with indentations are described as:
+; INDENT indented_codes... DEDENT
+
+NEWLINE = LF
+NAME = (ALPHA / "_") *(ALPHA / "_" / DIGIT)
+NUMBER = DIGIT *DIGIT
+STRING = DQUOTE *ANY DQUOTE / SQUOTE *ANY SQUOTE
+
+program = *stmt
+
+; Statements
+stmt = simple_stmt / compound_stmt
+simple_stmt = assign_stmt / expr_stmt
+            / del_stmt / pass_stmt
+assign_stmt = pat_list "=" *(pat_list "=") expr_list
+expr_stmt = expr_list
+del_stmt = "del" pat
+pass_stmt = "pass"
+flow_stmt = "return" [expr_list]
+
+compound_stmt = funcdef
+funcdef = "def" NAME "(" [argdeflist] ")" ":" suite
+suite = simple_stmt / NEWLINE INDENT *stmt DEDENT
+argdeflist = argdef *("," argdef)
+argdef = NAME ["=" expr]
+
+; Assignable expression
+pat_list = pat *("," pat) [","]
+pat = "(" pat_list ")"
+    / expr_atom "." NAME
+    / expr_atom "[" subscriptlist "]"
+
+; Expression
+expr_list = expr *("," expr) [","]
+expr = expr_val
+expr_val = expr_term *(("+" / "-") expr_term)
+expr_term = expr_factor *(("*" / "/" / "%") expr_factor)
+expr_factor = ("+" / "-" / "~") expr_atom
+expr_atom = atom *trailer
+atom = "(" [expr_list] ")"
+     / NAME / NUMBER / STRING *STRING
+     / "..." / "None" / "True" / "False"
+trailer = "(" expr_list ")"
+        / "[" expr_list "]"
+        / "." NAME

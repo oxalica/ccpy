@@ -127,7 +127,7 @@ static Structual trans(const Stmt &stmt) {
     return StructParen { "StmtNonlocal", trans_all(stmt.names) };
   }
   , [](const StmtAssign &stmt) {
-    return StructParen { "StmtExpr", {
+    return StructParen { "StmtAssign", {
       StructBracket { {}, trans_all(stmt.pats) },
       trans(stmt.expr),
     } };

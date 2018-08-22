@@ -36,7 +36,7 @@ bool is_expr_begin(OptTokRef tok) {
         return false;
     }
   }
-  , [](auto &) { return false; }
+  , [](const auto &) { return false; }
   );
 }
 
@@ -45,7 +45,49 @@ bool is_symbol(OptTokRef tok, Symbol sym) {
     return false;
   return match<bool>(*tok,
     [=](const TokSymbol &tok) { return tok.symbol == sym; },
-    [](auto &) { return false; }
+    [](const auto &) { return false; }
+  );
+}
+
+bool is_param_begin(OptTokRef tok) {
+  if(!tok)
+    return false;
+  return match<bool>(*tok
+  , [](const TokName &) { return true; }
+  , [](const TokSymbol &tok) { return tok.symbol == Symbol::Mul; }
+  , [](const auto &) { return false; }
+  );
+}
+
+bool is_line_end(OptTokRef tok) {
+  if(!tok)
+    return true;
+  return match<bool>(*tok
+  , [](const TokNewline &) { return true; }
+  , [](const TokDedent &) { return true; }
+  , [](const TokIndent &) { return true; }
+  , [](const auto &) { return false; }
+  );
+}
+
+Pat expr_to_pat(Expr &&expr) {
+  return match<Pat>(move(expr)
+  , [](ExprName &&expr) { return PatName { move(expr.name) }; }
+  , [](ExprMember &&expr) {
+    return PatAttr { move(*expr.obj), move(expr.member) };
+  }
+  , [](ExprIndex &&expr) {
+    return PatIndex { move(*expr.obj), move(*expr.idx) };
+  }
+  , [](ExprTuple &&expr) {
+    vector<Pat> pats;
+    for(auto &e: expr.elems)
+      pats.push_back(expr_to_pat(move(e)));
+    return PatTuple { move(pats) };
+  }
+  , [](auto &&) -> Pat {
+    throw StreamFailException { "Invalid pattern expression" };
+  }
   );
 }
 
@@ -57,7 +99,9 @@ struct Parser::Impl {
   template<typename ...Fs>
   bool try_eat(bool eof_ok, Fs ...fs) {
     auto tok = this->is.peek();
-    if(tok ? match<bool>(*tok, fs...) : eof_ok) {
+    if(tok
+        ? match<bool>(*tok, fs..., [](const auto &) { return false; })
+        : eof_ok) {
       this->is.get();
       return true;
     }
@@ -66,59 +110,253 @@ struct Parser::Impl {
 
   template<typename ...Fs>
   void expect(const char msg[], bool eof_ok, Fs ...fs) {
-    if(!this->try_eat(eof_ok, fs...))
-      throw StreamFailException { msg };
+    auto tok = this->is.get();
+    if(tok ? match<bool>(move(*tok), fs...) : eof_ok)
+      return; // Ok
+    throw StreamFailException { msg };
   }
 
   bool try_eat_symbol(Symbol sym) {
-    return this->try_eat(false
-    , [=](const TokSymbol &tok) { return tok.symbol == sym; }
-    , [](auto &) { return false; }
-    );
-  }
-
-  void expect_newline() {
-    this->expect("Expecting newline", true
-    , [](const TokNewline &) { return true; }
-    , [](const TokDedent &) { return true; } // Dedent before EOF
-    , [](auto &) { return false; }
+    return this->try_eat(
+      false,
+      [=](const TokSymbol &tok) { return tok.symbol == sym; }
     );
   }
 
   void expect_symbol(const char msg[], Symbol sym) {
-    return this->expect(msg, false
-    , [=](const TokSymbol &tok) { return tok.symbol == sym; }
-    , [](auto &) { return false; }
+    this->expect(msg, false
+    , [=](TokSymbol &&tok) { return tok.symbol == sym; }
+    , [](auto &&) { return false; }
     );
   }
 
-  optional<Stmt> get_stmt() {
+  Str expect_name(const char msg[]) {
+    Str ret;
+    this->expect(msg, false
+    , [&](TokName &&tok) { ret = move(tok.name); return true; }
+    , [](auto &&) { return false; }
+    );
+    return ret;
+  }
+
+  void expect_line_end(const char msg[]) {
+    if(!is_line_end(this->is.peek()))
+      throw StreamFailException { msg };
+  }
+
+  vector<Stmt> get_stmt_or_suite() {
+    auto nxt = this->is.peek();
+    if(!nxt)
+      throw StreamFailException { "Expect stmt or suite, found EOF" };
+    bool is_suite = this->try_eat(
+      false,
+      [](const TokNewline &) { return true; }
+    );
+
+    vector<Stmt> ret;
+    if(!is_suite) {
+      ret.push_back(this->get_stmt());
+      return ret;
+    }
+
+    this->expect("Expect indent", false,
+      [](TokIndent &&) { return true; },
+      [](auto &&) { return false; }
+    );
+    while(nxt = this->is.peek()) {
+      this->eat_newlines();
+      bool is_dedent = this->try_eat(
+        false,
+        [](const TokDedent &) { return true; }
+      );
+      if(is_dedent)
+        return move(ret);
+      ret.push_back(this->get_stmt());
+    }
+    throw StreamFailException { "Expect stmt or dedent, found EOF" };
+  }
+
+  optional<Stmt> try_get_stmt() {
+    this->eat_newlines();
+
     auto nxt = this->is.peek();
     if(!nxt)
       return {};
-    if(is_expr_begin(this->is.peek())) {
-      auto ret = this->get_expr_list();
-      this->expect_newline();
-      auto expr = ret.first.size() == 1 && !ret.second
-        ? move(ret.first.front())
-        : ExprTuple { move(ret.first) };
-      return StmtExpr { move(expr) };
-    }
-    return match<Stmt>(*nxt
-    , [&](const TokKeyword &tok) {
-      switch(tok.keyword) {
-        case Keyword::Pass:
-          this->is.get();
-          this->expect_newline();
-          return StmtPass {};
-        default:
-          throw StreamFailException { "Unexpected keyword for stmt" };
+    return this->get_stmt();
+  }
+
+  void eat_newlines() {
+    while(this->try_eat(false, [](const TokNewline &) { return true; }))
+      ;
+  }
+
+  Stmt get_stmt() {
+    this->eat_newlines();
+
+    auto nxt = this->is.peek();
+    if(!nxt)
+      throw StreamFailException { "Expect stmt, found EOF" };
+
+    if(is_expr_begin(nxt))
+      return this->get_stmt_ahead_expr();
+    else
+      return match<Stmt>(*nxt
+      , [&](const TokKeyword &tok) {
+        return this->get_stmt_ahead_kw(tok.keyword);
       }
+      , [&](const auto &) -> Stmt {
+        throw StreamFailException { "Unexpected token for stmt" };
+      }
+      );
+  }
+
+  Stmt get_stmt_ahead_expr() {
+    vector<Pat> pats;
+    auto expr = *this->get_expr_list_maybe_tuple(); // Checked
+    while(this->try_eat_symbol(Symbol::Eq)) {
+      pats.push_back(expr_to_pat(move(expr)));
+      auto c = this->get_expr_list_maybe_tuple();
+      if(!c)
+        throw StreamFailException { "Empty expr" };
+      expr = move(*c);
     }
-    , [&](auto &&) -> Stmt {
-      throw StreamFailException { "Unexpected token for stmt" };
+    this->expect_line_end("Expect newline after expr stmt");
+    if(pats.empty())
+      return StmtExpr { move(expr) };
+    return StmtAssign { move(pats), move(expr) };
+  }
+
+  Stmt get_stmt_ahead_kw(Keyword kw) {
+    switch(kw) {
+      case Keyword::Pass:
+        this->is.get();
+        this->expect_line_end("Expect newline after pass stmt");
+        return StmtPass {};
+
+      case Keyword::Del: {
+        this->is.get();
+        auto pat = this->get_pat();
+        this->expect_line_end("Expect newline after del stmt");
+        return StmtDel { move(pat) };
+      }
+
+      case Keyword::Nonlocal: {
+        this->is.get();
+        auto names = this->get_name_list();
+        this->expect_line_end("Expect newline after nonlocal stmt");
+        return StmtNonlocal { move(names) };
+      }
+
+      case Keyword::Global: {
+        this->is.get();
+        auto names = this->get_name_list();
+        this->expect_line_end("Expect newline after global stmt");
+        return StmtGlobal { move(names) };
+      }
+
+      case Keyword::Raise: {
+        this->is.get();
+        auto c = this->get_expr_list_maybe_tuple();
+        if(!c)
+          throw StreamFailException { "Raise without value is unsupported" };
+        this->expect_line_end("Expect newline after raise stmt");
+        return StmtRaise { move(*c) };
+      }
+
+      case Keyword::Return: {
+        this->is.get();
+        auto c = this->get_expr_list_maybe_tuple();
+        this->expect_line_end("Expect newline after return stmt");
+        return StmtReturn { move(c) };
+      }
+
+      case Keyword::Def:
+        return this->get_stmt_ahead_def(); // Already eat newline
+
+      default:
+        throw StreamFailException { "Unexpected keyword for stmt" };
     }
-    );
+  }
+
+  Stmt get_stmt_ahead_def() {
+    this->is.get(); // `def`
+    Str name = this->expect_name("Expect name after `def`");
+    this->expect_symbol("Expect `(` after function name", Symbol::LParen);
+    auto args = this->get_func_params();
+    this->expect_symbol("Expect `)` after function params", Symbol::RParen);
+    this->expect_symbol("Expect `:` after function signature", Symbol::Colon);
+    auto body = this->get_stmt_or_suite();
+
+    return StmtDef {
+      move(name),
+      move(args.first),
+      move(args.second),
+      move(body),
+    };
+  }
+
+  // Return (parameters, optional rest parameter).
+  pair<vector<FuncArg>, optional<Str>> get_func_params() {
+    vector<FuncArg> args;
+    optional<Str> rest_arg;
+    bool has_default = false;
+
+    while(is_param_begin(this->is.peek())) {
+      match(*this->is.get() // Checked
+      , [&](TokName &&tok) {
+        optional<Expr> default_;
+        if(this->try_eat_symbol(Symbol::Eq)) {
+          default_ = this->get_expr();
+          has_default = true;
+        } else if(has_default) // Previous param has default, but this not.
+          throw StreamFailException
+            { "Params after one having default should all have default" };
+        args.push_back(FuncArg { move(tok.name), move(default_) });
+      }
+      , [&](TokSymbol &&tok) {
+        if(tok.symbol == Symbol::Mul) {
+          if(rest_arg) // Always have it
+            throw StreamFailException { "At most one rest param is allowed" };
+          rest_arg = this->expect_name("Expect name for rest param");
+        } else
+          throw StreamFailException
+            { "Impossible: unexpected symbol for param" };
+      }
+      , [](auto &&) {
+        throw StreamFailException { "Impossible: unexpected token for param" };
+      }
+      );
+      if(!this->try_eat_symbol(Symbol::Comma))
+        break;
+    }
+    return { move(args), move(rest_arg) };
+  }
+
+  // Eat `name (, name)*`. Note that tailing comma is unexpected.
+  vector<Str> get_name_list() {
+    vector<Str> ret;
+    ret.push_back(this->expect_name("Expect name in name list"));
+    while(this->try_eat_symbol(Symbol::Comma))
+      ret.push_back(this->expect_name("Expect name in name list"));
+    return ret;
+  }
+
+  Pat get_pat() {
+    auto c = this->get_expr_list_maybe_tuple();
+    if(!c)
+      throw StreamFailException { "Empty pat" };
+    return expr_to_pat(move(*c));
+  }
+
+  // Parse `e` as expr, `(e,)+ [e]` as tuple.
+  // Return None if it eat nothing.
+  optional<Expr> get_expr_list_maybe_tuple() {
+    auto ret = this->get_expr_list();
+    if(ret.first.empty())
+      return {};
+    return ret.first.size() == 1 && !ret.second // Length == 1, no tailing comma
+      ? move(ret.first.front())
+      : ExprTuple { move(ret.first) };
   }
 
   /// Return (expressions, whether_has_tailing_comma)
@@ -202,6 +440,14 @@ struct Parser::Impl {
         this->is.get();
         ret = ExprCall { move(ret), this->get_expr_list().first };
         this->expect_symbol("Expecting `)`", Symbol::RParen);
+      } else if(is_symbol(tok, Symbol::LBracket)) {
+        // Index
+        this->is.get();
+        auto c = this->get_expr_list_maybe_tuple();
+        if(!c)
+          throw StreamFailException { "Empty index" };
+        ret = ExprIndex { move(ret), move(*c) };
+        this->expect_symbol("Expecting `]`", Symbol::RBracket);
       } else if(is_symbol(tok, Symbol::Dot)) {
         // Member access
         this->is.get();
@@ -270,7 +516,7 @@ Parser::Parser(IBufSource<Token> &is)
 Parser::~Parser() noexcept {}
 
 optional<Stmt> Parser::get() {
-  return this->pimpl->get_stmt();
+  return this->pimpl->try_get_stmt();
 }
 
 } // namespace ccpy::parse

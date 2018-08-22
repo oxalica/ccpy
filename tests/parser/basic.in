@@ -12,3 +12,25 @@ True
 True, False + None
 '123', "234"
 '3\n\'', "\\\""
+global a
+nonlocal b, c, d
+return (1,)[0]
+'123'[1, 2]
+raise Exception()
+a = 1
+a, b = b, a
+a = b.c = d, e = f()[g()] = 1, a
+del a
+del b, c
+del d[0]
+def f(): pass
+def g(x): return x
+def h(*xs): return xs
+def i(a, b=1+2, *xs): return
+def j():
+  pass
+def k():
+  1
+  def l():
+    return
+  return l
