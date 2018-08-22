@@ -311,6 +311,8 @@ struct Parser::Impl {
         } else if(has_default) // Previous param has default, but this not.
           throw StreamFailException
             { "Params after one having default should all have default" };
+        else if(rest_arg)
+          throw StreamFailException { "Rest param should be the last param" };
         args.push_back(FuncArg { move(tok.name), move(default_) });
       }
       , [&](TokSymbol &&tok) {

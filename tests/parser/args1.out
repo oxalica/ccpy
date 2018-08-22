@@ -1,0 +1,4 @@
+StmtDef("f", [("a", None), ("b", Some(ExprLiteral(LitInteger(2)))), ("c", Some(ExprLiteral(LitInteger(3))))], Some("d"), [StmtReturn(Some(ExprTuple(ExprName("a"), ExprName("b"), ExprName("c"), ExprName("d"))))])
+StmtDef("g", [("a", Some(ExprLiteral(LitNone)))], None, [StmtReturn(Some(ExprName("a")))])
+StmtDef("h", [], Some("x"), [StmtReturn(Some(ExprName("x")))])
+End

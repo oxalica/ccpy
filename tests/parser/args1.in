@@ -1,0 +1,8 @@
+def f(a, b=2, c=3, *d):
+  return a, b, c, d
+
+def g(a=None):
+  return a
+
+def h(*x):
+  return x
