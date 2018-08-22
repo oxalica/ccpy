@@ -102,6 +102,10 @@ void NameScope::mark_global(const Str &name) {
   pimpl->mark_global(name);
 }
 
+void NameScope::mark_local(const Str &name) {
+  pimpl->mark_local(name);
+}
+
 NameKind NameScope::get(const Str &name) {
   return pimpl->get(name);
 }

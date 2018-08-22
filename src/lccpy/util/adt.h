@@ -77,7 +77,7 @@ public:
   ~optional() noexcept {}
 
   optional &operator=(const optional &) = default;
-  optional &operator=(optional &&) noexcept = default;
+  optional &operator=(optional &&) = default;
 
   explicit operator bool() const noexcept { return this->value.has_value(); }
   const T *operator->() const { return &*this->value; }
@@ -111,7 +111,11 @@ public:
   ~optional() noexcept {}
 
   optional &operator=(const optional &) = default;
-  optional &operator=(optional &&) noexcept = default;
+  optional &operator=(optional &&ri) noexcept {
+    this->value = ri.value;
+    ri.value = nullptr;
+    return *this;
+  }
 
   explicit operator bool() const noexcept { return this->value != nullptr; }
   const T *operator->() const { return this->value; }
