@@ -21,6 +21,7 @@ DECL_TAGGED_UNION(Immediate, HIR_IMMEDIATE_LIST)
 using LocalIdx = std::ptrdiff_t;
 
 #define HIR_LIST(F) \
+  F(HIRMov, { LocalIdx dest, source; }) \
   F(HIRImm, { LocalIdx dest; Immediate imm; }) \
   F(HIRClosure, { \
     LocalIdx dest; \

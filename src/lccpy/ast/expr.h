@@ -33,6 +33,7 @@ DECL_REFL_ENUM(BinaryOp, BINARY_OP_LIST)
   F(ExprLiteral, { Literal lit; }) \
   F(ExprMember, { owned<Expr> obj; Str member; }) \
   F(ExprCall, { owned<Expr> func; std::vector<Expr> args; }) \
+  F(ExprIndex, { owned<Expr> obj; owned<Expr> idx; }) \
   F(ExprTuple, { std::vector<Expr> elems; }) \
   F(ExprUnary, { UnaryOp op; owned<Expr> expr; }) \
   F(ExprBinary, { BinaryOp op; owned<Expr> lexpr, rexpr; }) \

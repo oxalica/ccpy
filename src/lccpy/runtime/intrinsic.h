@@ -11,21 +11,26 @@ namespace ccpy::runtime {
 #define INTRINSIC_LIST(F) \
   F(_, v_call) \
   F(0, v_args) \
+  F(1, v_del) \
   F(0, get_global) \
   F(2, is) \
   F(1, id) \
   F(3, getattr) \
   F(3, setattr) \
+  F(2, delattr) \
   F(_, tuple_make) \
   F(1, tuple_len) \
   F(2, tuple_idx) \
   F(2, tuple_concat) \
   F(4, tuple_splice) \
+  F(4, tuple_slice) \
   F(2, int_add) \
   F(2, int_sub) \
   F(2, int_mul) \
   F(2, int_div) \
   F(2, int_mod) \
+  F(2, int_lt) \
+  F(2, int_eq) \
   F(1, int_to_str) \
   F(4, str_slice) \
   F(1, str_to_ord) \
@@ -33,6 +38,7 @@ namespace ccpy::runtime {
   F(2, str_concat) \
   F(3, dict_get) \
   F(3, dict_set) \
+  F(2, dict_del) \
   F(1, dict_to_tuple) \
   F(1, print) \
   F(0, flush) \

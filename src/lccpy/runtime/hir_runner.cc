@@ -138,6 +138,10 @@ struct HIRRunner::Impl {
       this->mod.closures[0].hirs.size() == this->context.ip; // At the end
   }
 
+  void exec(const HIRMov &hir) {
+    *this->local(hir.dest) = *this->local(hir.source);
+  }
+
   void exec(const HIRImm &hir) {
     *this->local(hir.dest) = match<ObjectRef>(hir.imm
     , [](const ImmInteger &imm) { return new_obj(ObjInt { imm.value }); }

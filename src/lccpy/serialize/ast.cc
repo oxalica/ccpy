@@ -19,6 +19,13 @@ static auto trans_all(const vector<T> &v) {
   return ret;
 }
 
+template<typename T>
+static Structual trans_opt(const optional<T> &x) {
+  if(x)
+    return StructParen { "Some", { trans(*x) } };
+  return StructValue { "None" };
+}
+
 static Structual trans(const Literal &lit) {
   return match<Structual>(lit
   , [](const LitInteger &lit) {
@@ -53,6 +60,10 @@ static Structual trans(BinaryOp op) {
   return StructStr { BinaryOpMap[static_cast<size_t>(op)] };
 }
 
+static Structual trans(const Str &s) {
+  return StructStr { s };
+}
+
 static Structual trans(const Expr &expr) {
   return match<Structual>(expr
   , [](const ExprName &expr) {
@@ -73,6 +84,12 @@ static Structual trans(const Expr &expr) {
       StructBracket { {}, trans_all(expr.args) },
     } };
   }
+  , [] (const ExprIndex &expr) {
+    return StructParen { "ExprIndex", {
+      trans(*expr.obj),
+      trans(*expr.idx),
+    } };
+  }
   , [] (const ExprTuple &expr) {
     return StructParen { "ExprTuple", trans_all(expr.elems) };
   }
@@ -91,6 +108,10 @@ static Structual trans(const Expr &expr) {
   );
 }
 
+static Structual trans(const vector<Stmt> &stmt) {
+  return StructBracket { {}, trans_all(stmt) };
+}
+
 static Structual trans(const Stmt &stmt) {
   return match<Structual>(stmt
   , [](const StmtPass &) {
@@ -98,6 +119,65 @@ static Structual trans(const Stmt &stmt) {
   }
   , [](const StmtExpr &stmt) {
     return StructParen { "StmtExpr", { trans(stmt.expr) } };
+  }
+  , [](const StmtGlobal &stmt) {
+    return StructParen { "StmtGlobal", trans_all(stmt.names) };
+  }
+  , [](const StmtNonlocal &stmt) {
+    return StructParen { "StmtNonlocal", trans_all(stmt.names) };
+  }
+  , [](const StmtAssign &stmt) {
+    return StructParen { "StmtExpr", {
+      StructBracket { {}, trans_all(stmt.pats) },
+      trans(stmt.expr),
+    } };
+  }
+  , [](const StmtReturn &stmt) {
+    return StructParen { "StmtReturn", { trans_opt(stmt.value) } };
+  }
+  , [](const StmtRaise &stmt) {
+    return StructParen { "StmtRaise", { trans(stmt.value) } };
+  }
+  , [](const StmtDel &stmt) {
+    return StructParen { "StmtDel", { trans(stmt.pat) } };
+  }
+  , [](const StmtDef &stmt) {
+    return StructParen { "StmtDef", {
+      StructStr { stmt.name },
+      StructBracket { {}, trans_all(stmt.args) },
+      trans_opt(stmt.rest_args),
+      trans(stmt.body),
+    } };
+  }
+  );
+}
+
+static Structual trans(const FuncArg &arg) {
+  return StructParen { {}, {
+    trans(arg.name),
+    trans_opt(arg.default_),
+  } };
+}
+
+static Structual trans(const Pat &pat) {
+  return match<Structual>(pat
+  , [](const PatName &pat) {
+    return StructParen { "PatName", { trans(pat.name) } };
+  }
+  , [](const PatTuple &pat) {
+    return StructBracket { "PatTuple", { trans_all(pat.pats) } };
+  }
+  , [](const PatAttr &pat) {
+    return StructParen { "PatAttr", {
+      trans(pat.expr),
+      trans(pat.name),
+    } };
+  }
+  , [](const PatIndex &pat) {
+    return StructParen { "PatIndex", {
+      trans(pat.expr),
+      trans(pat.idx),
+    } };
   }
   );
 }

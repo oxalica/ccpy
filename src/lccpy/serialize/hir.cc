@@ -39,6 +39,9 @@ Str trans(const vector<LocalIdx> &idxs) {
 
 Str trans(const HIR &hir) {
   return match<Str>(hir
+  , [](const HIRMov &hir) {
+    return "%" + trans(hir.dest) + " = %" + trans(hir.source);
+  }
   , [](const HIRImm &hir) {
     return "%" + trans(hir.dest) + " = " + trans(hir.imm);
   }

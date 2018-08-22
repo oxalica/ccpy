@@ -63,6 +63,10 @@ SIG(v_args0) { ARGS(v_args0, 0)
   throw IntrinsicException { "Call to virtual intrinsic v_args0" };
 }
 
+SIG(v_del1) { ARGS(v_del1, 1)
+  throw IntrinsicException { "Call to virtual intrinsic v_del1" };
+}
+
 SIG(get_global0) { ARGS(get_global0, 0)
   return this->global;
 }
@@ -83,7 +87,13 @@ SIG(getattr3) { ARGS(getattr3, 3)
 
 SIG(setattr3) { ARGS(setattr3, 3)
   auto &name = expect<ObjStr>(args[1], "Wrong name type for setattr3").value;
-  args[1]->attrs.insert_or_assign(name, args[2]);
+  args[0]->attrs.insert_or_assign(name, args[2]);
+  return this->none;
+}
+
+SIG(delattr2) { ARGS(delattr2, 2)
+  auto &name = expect<ObjStr>(args[1], "Wrong name type for delattr3").value;
+  args[0]->attrs.erase(name);
   return this->none;
 }
 
@@ -145,6 +155,25 @@ SIG(tuple_splice4) { ARGS(tuple_splice4, 4)
   return args[0];
 }
 
+SIG(tuple_slice4) { ARGS(tuple_slice4, 4)
+  auto &tup =
+    expect<ObjTuple>(args[0], "Wrong string type for tuple_slice4").elems;
+  auto &l = expect<ObjInt>(args[1], "Wrong l type for tuple_slice4").value;
+  auto &r = expect<ObjInt>(args[2], "Wrong r type for tuple_slice4").value;
+  auto &step = expect<ObjInt>(args[3], "Wrong step type for tuple_slice4").value;
+  if(step == 0)
+    throw IntrinsicException { "tuple_slice4 got zero step" };
+  ObjectTuple ret;
+  auto len = Integer(tup.size());
+  if(step > 0)
+    for(auto i = max(l, Integer { 0 }); i < len && i < r; i += step)
+      ret.push_back(tup[i]);
+  else
+    for(auto i = min(l, len - 1); i >= 0 && i > r; i += step)
+      ret.push_back(tup[i]);
+  return new_obj(ObjTuple { move(tup) });
+}
+
 #define IMPL_INT_OP(NAME, OP, TEST) \
   SIG(NAME) { ARGS(NAME, 2) \
     auto &a = expect<ObjInt>(args[0], "Wrong first type for " #NAME).value; \
@@ -164,6 +193,18 @@ IMPL_INT_OP(int_mod2, %, {
   if(b == 0)
     throw IntrinsicException { "int_mod2 divide by zero" };
 })
+
+SIG(int_lt2) { ARGS(int_lt2, 2)
+  auto &a = expect<ObjInt>(args[0], "Wrong first type for int_lt2").value;
+  auto &b = expect<ObjInt>(args[1], "Wrong second type for int_lt2").value;
+  return a < b ? this->true_ : this->false_;
+}
+
+SIG(int_eq2) { ARGS(int_eq2, 2)
+  auto &a = expect<ObjInt>(args[0], "Wrong first type for int_eq2").value;
+  auto &b = expect<ObjInt>(args[1], "Wrong second type for int_eq2").value;
+  return a == b ? this->true_ : this->false_;
+}
 
 SIG(int_to_str1) { ARGS(int_to_str1, 1)
   auto &a = expect<ObjInt>(args[0], "Wrong int type for int_to_str1").value;
@@ -221,6 +262,13 @@ SIG(dict_set3) { ARGS(dict_set3, 3)
   auto &dict = expect<ObjDict>(args[0], "Wrong dict type for dict_get3").value;
   auto &key = expect<ObjStr>(args[1], "Wrong key type for dict_get3").value;
   dict.insert_or_assign(key, args[2]);
+  return this->none;
+}
+
+SIG(dict_del2) { ARGS(dict_del2, 3)
+  auto &dict = expect<ObjDict>(args[0], "Wrong dict type for dict_del2").value;
+  auto &key = expect<ObjStr>(args[1], "Wrong key type for dict_del2").value;
+  dict.erase(key);
   return this->none;
 }
 

@@ -19,6 +19,16 @@ static void fold(Stmt &stmt) {
   match(stmt
   , [](StmtPass &) {}
   , [](StmtExpr &stmt) { fold(stmt.expr); }
+  , [](StmtAssign &stmt) { fold(stmt.expr); }
+  , [](StmtReturn &stmt) {
+    if(stmt.value)
+      fold(*stmt.value);
+  }
+  , [](StmtDef &stmt) {
+    for(auto &s: stmt.body)
+      fold(s);
+  }
+  , [](auto &) {}
   );
 }
 
@@ -116,6 +126,7 @@ static void fold(Expr &expr) {
   , [](ExprLiteral &) {}
   , [](ExprMember &expr) { fold(*expr.obj); }
   , [](ExprCall &expr) { fold(*expr.func); fold(expr.args); }
+  , [](ExprIndex &expr) { fold(*expr.obj); fold(*expr.idx); }
   , [](ExprTuple &expr) { fold(expr.elems); }
   , [&](ExprUnary &expr) {
     fold(*expr.expr);

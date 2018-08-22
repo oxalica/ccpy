@@ -102,13 +102,15 @@ struct Impl {
     return this->mod.closures[this->mod_stack.back()];
   }
 
-  void push_scope(bool global = false) {
+  size_t push_scope(bool global = false) {
+    auto closure_id = this->mod.closures.size();
     this->mod_stack.push_back(this->mod.closures.size());
     this->mod.closures.push_back(Closure { 0, {} });
     if(global)
       this->scope_stack.push_back(NameScope { }); // Global space
     else
       this->scope_stack.push_back(NameScope { this->scope_stack.back() });
+    return closure_id;
   }
 
   vector<Str> pop_scope() {
@@ -131,6 +133,10 @@ struct Impl {
 
   void put(HIR &&hir) {
     this->closure().hirs.push_back(std::move(hir));
+  }
+
+  void store(const Local &dest, Local &&value) {
+    *this << HIRMov { dest, value };
   }
 
   Local eval(Immediate &&imm) {
@@ -178,30 +184,295 @@ struct Impl {
   }
 
   Local eval_name(const Str &name) {
-    return match<Local>(this->scope().get(name)
+    auto c = this->resolve_name(name);
+    if(c)
+      return move(*c);
+    return this->eval_builtin_call("global_get", SEQ1(
+      this->eval(ImmStr { name })
+    ));
+  }
+
+  optional<Local> resolve_name(const Str &name) {
+    optional<Local> ret;
+    match(this->scope().get(name)
     , [&](const NameLocal &kind) {
-      return Local { LocalIdx(kind.id) };
+      ret = Local { LocalIdx(kind.id) };
     }
+    , [&](const NameGlobal &) { }
+    , [&](const NameCapture &kind) {
+      ret = Local { -1 - LocalIdx(kind.id) };
+    }
+    );
+    return ret;
+  }
+
+  template<typename T, typename F>
+  Local eval_cond(Local &&cond, T f_true, F f_false) {
+    auto ret = this->new_local();
+
+    auto begin_jmp = this->cur_pos();
+    *this << HIRJF { move(cond), 0 }; // Placeholder
+    this->store(Local { ret.id }, f_true());
+    auto const_false = this->eval(ImmBool { false });
+    auto mid_jmp = this->cur_pos();
+    *this << HIRJF { move(const_false), 0 }; // Placeholder
+    this->store(Local { ret.id }, f_false());
+    auto end_pos = this->cur_pos();
+
+    match(this->closure().hirs[begin_jmp]
+    , [&](HIRJF &hir) { hir.target = mid_jmp + 1; }
+    , [&](auto &) { throw HIRGenException { "Impossible: JF1 locate fail" }; }
+    );
+    match(this->closure().hirs[mid_jmp]
+    , [&](HIRJF &hir) { hir.target = end_pos; }
+    , [&](auto &) { throw HIRGenException { "Impossible: JF2 locate fail" }; }
+    );
+
+    return ret;
+  }
+
+  void run(const vector<Stmt> &stmts) {
+    for(auto &c: stmts)
+      this->run(c);
+  }
+
+  void run(const Stmt &stmt) {
+    match(stmt, [&](const auto &stmt) {
+      this->run(stmt);
+    });
+  }
+
+  void run(const StmtPass &) {}
+
+  void run(const StmtExpr &stmt) {
+    this->eval(stmt.expr);
+  }
+
+  void name_store(const Str &name, Local &&value) {
+    match(this->scope().get(name)
     , [&](const NameGlobal &) {
-      return this->eval_builtin_call("global_get", SEQ1(
-        this->eval(ImmStr { name })
+      this->eval_intrinsic_call(Intrinsic::dict_set3, SEQ3(
+        this->eval_intrinsic_call(Intrinsic::get_global0, SEQ0()),
+        this->eval(ImmStr { name }),
+        move(value)
       ));
     }
+    , [&](const NameLocal &kind) {
+      this->store(Local { LocalIdx(kind.id) }, move(value));
+    }
     , [&](const NameCapture &kind) {
-      return Local { -1 - LocalIdx(kind.id) };
+      this->store(Local { -1 - LocalIdx(kind.id) }, move(value));
     }
     );
   }
 
-  void put(const vector<Stmt> &stmts) {
-    for(auto &c: stmts)
-      *this << c;
+  void pat_store(const Pat &pat, Local &&value) {
+    match(pat
+    , [&](const PatName &pat) {
+      this->name_store(pat.name, move(value));
+    }
+    , [&](const PatTuple &pat) {
+      size_t idx = 0;
+      for(auto &p: pat.pats) {
+        auto c = this->eval_builtin_call("index2", SEQ2(
+          move(value),
+          this->eval(ImmInteger { Integer(idx++) })
+        ));
+        this->pat_store(p, move(c));
+      }
+    }
+    , [&](const PatAttr &pat) {
+      this->eval_builtin_call("setattr3", SEQ3(
+        this->eval(pat.expr),
+        this->eval(ImmStr { pat.name }),
+        move(value)
+      ));
+    }
+    , [&](const PatIndex &pat) {
+      this->eval_builtin_call("setitem3", SEQ3(
+        this->eval(pat.expr),
+        this->eval(pat.idx),
+        move(value)
+      ));
+    }
+    );
   }
 
-  void put(const Stmt &stmt) {
+  void pat_del(const Pat &pat) {
+    match(pat
+    , [&](const PatName &pat) {
+      auto c = this->resolve_name(pat.name);
+      if(c) // Local
+        this->eval_intrinsic_call(Intrinsic::v_del1, SEQ1(
+          move(*c)
+        ));
+      else // Global
+        this->eval_intrinsic_call(Intrinsic::dict_del2, SEQ2(
+          this->eval_intrinsic_call(Intrinsic::get_global0, SEQ0()),
+          this->eval(ImmStr { pat.name })
+        ));
+    }
+    , [&](const PatTuple &pat) {
+      for(auto &p: pat.pats)
+        this->pat_del(p);
+    }
+    , [&](const PatAttr &pat) {
+      this->eval_builtin_call("delattr2", SEQ2(
+        this->eval(pat.expr),
+        this->eval(ImmStr { pat.name })
+      ));
+    }
+    , [&](const PatIndex &pat) {
+      this->eval_builtin_call("delitem2", SEQ2(
+        this->eval(pat.expr),
+        this->eval(pat.idx)
+      ));
+    }
+    );
+  }
+
+  void run(const StmtAssign &stmt) {
+    auto value = this->eval(stmt.expr);
+    for(auto &pat: stmt.pats)
+      this->pat_store(pat, Local { value.id }); // Borrow
+  }
+
+  void run(const StmtReturn &stmt) {
+    auto value = stmt.value
+      ? this->eval(*stmt.value)
+      : this->eval(ImmNone {});
+    *this << HIRReturn { value };
+  }
+
+  void run(const StmtRaise &stmt) {
+    *this << HIRRaise { this->eval(stmt.value) };
+  }
+
+  void run(const StmtDel &stmt) {
+    this->pat_del(stmt.pat);
+  }
+
+  void run(const StmtDef &stmt) {
+    size_t closure_id = this->push_scope();
+    this->local_preresolve(stmt);
+
+    this->load_args(stmt.args, stmt.rest_args);
+    this->run(stmt.body);
+
+    auto name_captured = this->pop_scope();
+    vector<Local> local_captured;
+    vector<LocalIdx> idx_captured;
+    for(auto &name: name_captured) {
+      auto var = this->eval_name(name);
+      idx_captured.push_back(var);
+      local_captured.push_back(move(var)); // Keep when collecting
+    }
+
+    local_captured.clear(); // Now release
+    auto f = this->new_local();
+    *this << HIRClosure { f, closure_id, move(idx_captured) };
+
+    vector<Local> defaults;
+    for(auto &arg: stmt.args)
+      if(arg.default_)
+        defaults.push_back(this->eval(*arg.default_));
+    auto tup_defaults = this->eval_tuple(move(defaults));
+    this->eval_builtin_call("setattr3", SEQ3(
+      Local { f.id }, // Borrow
+      this->eval(ImmStr { "__defaults__" }),
+      move(tup_defaults)
+    ));
+    this->pat_store(PatName { stmt.name }, move(f));
+  }
+
+  void load_args(const vector<FuncArg> &args, const optional<Str> &rest_args) {
+    auto real_args = this->eval_intrinsic_call(Intrinsic::v_args0, SEQ0());
+    auto real_len = this->eval_intrinsic_call(Intrinsic::tuple_len1, SEQ1(
+      Local { real_args.id } // Borrow
+    ));
+
+    auto f_get_arg = [&](size_t idx) {
+      return this->eval_intrinsic_call(Intrinsic::tuple_idx2, SEQ2(
+        this->eval_intrinsic_call(Intrinsic::v_args0, SEQ0()),
+        this->eval(ImmInteger { Integer(idx) })
+      ));
+    };
+    size_t idx = 0, idx_default = 0;
+    for(auto &arg: args) {
+      if(!arg.default_)
+        this->name_store(arg.name, f_get_arg(idx));
+      else {
+        auto has_arg = this->eval_intrinsic_call(Intrinsic::int_lt2, SEQ2(
+          this->eval(ImmInteger { Integer(idx) }),
+          Local { real_len.id } // Borrow
+        ));
+        auto val = this->eval_cond(move(has_arg), [&]() {
+          return f_get_arg(idx);
+        }, [&]() { // Load default
+          return this->eval_intrinsic_call(Intrinsic::tuple_idx2, SEQ2(
+            Local { real_args.id }, // Borrow
+            this->eval(ImmInteger { Integer(idx_default++) })
+          ));
+        });
+        this->name_store(arg.name, move(val));
+      }
+      ++idx;
+    }
+
+    if(rest_args) {
+      auto rest = this->eval_intrinsic_call(Intrinsic::tuple_slice4, SEQ4(
+        move(real_args),
+        this->eval(ImmInteger { Integer(args.size()) }),
+        this->eval(ImmNone {}),
+        this->eval(ImmNone {})
+      ));
+      this->name_store(*rest_args, move(rest));
+    }
+  }
+
+  void local_preresolve(const StmtDef &stmt) {
+    for(auto &arg: stmt.args)
+      this->scope().mark_local(arg.name);
+    if(stmt.rest_args)
+      this->scope().mark_local(*stmt.rest_args);
+    for(auto &stmt: stmt.body)
+      this->local_preresolve(stmt);
+  }
+
+  void local_preresolve(const Stmt &stmt) {
     match(stmt
-    , [](const StmtPass &) {}
-    , [&](const StmtExpr &stmt) { this->eval(stmt.expr); }
+    , [&](const StmtGlobal &stmt) {
+      for(auto &name: stmt.names)
+        this->scope().mark_global(name);
+    }
+    , [&](const StmtNonlocal &stmt) {
+      for(auto &name: stmt.names)
+        this->scope().mark_nonlocal(name);
+    }
+    , [&](const StmtAssign &stmt) {
+      for(auto &p: stmt.pats)
+        this->local_preresolve(p);
+    }
+    , [&](const StmtDel &stmt) {
+      this->local_preresolve(stmt.pat);
+    }
+    , [&](const StmtDef &stmt) {
+      this->scope().mark_local(stmt.name);
+    }
+    , [&](const auto &) {}
+    );
+  }
+
+  void local_preresolve(const Pat &pat) {
+    match(pat
+    , [&](const PatName &pat) {
+      this->scope().mark_local(pat.name);
+    }
+    , [&](const PatTuple &pat) {
+      for(auto &p: pat.pats)
+        this->local_preresolve(p);
+    }
+    , [&](const auto &) {}
     );
   }
 
@@ -269,6 +540,15 @@ struct Impl {
     }
   }
 
+  Local eval(const ExprIndex &expr) {
+    auto obj = this->eval(*expr.obj);
+    auto idx = this->eval(*expr.idx);
+    return this->eval_builtin_call("index", SEQ2(
+      move(obj),
+      move(idx)
+    ));
+  }
+
   Local eval(const ExprTuple &expr) {
     vector<Local> elems;
     for(auto &elem: expr.elems)
@@ -299,7 +579,7 @@ unordered_map<Str, Intrinsic> Impl::IntrinsicReverseMap;
 Module HIRGen::operator()(const vector<Stmt> &stmts) const {
   try {
     Impl t {};
-    t << stmts;
+    t.run(stmts);
     auto captured = t.pop_scope();
     if(!captured.empty())
       throw HIRGenException { "Impossible: Global captures" };
