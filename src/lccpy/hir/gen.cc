@@ -1,4 +1,5 @@
 #include "./gen.h"
+#include <memory>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -80,7 +81,7 @@ struct SeqVec {
 struct Impl {
   Module mod;
   vector<size_t> mod_stack;
-  vector<NameScope> scope_stack;
+  vector<shared_ptr<NameScope>> scope_stack;
 
   static unordered_map<Str, Intrinsic> IntrinsicReverseMap;
 
@@ -95,7 +96,7 @@ struct Impl {
   }
 
   NameScope &scope() {
-    return this->scope_stack.back();
+    return *this->scope_stack.back();
   }
 
   Closure &closure() {
@@ -106,10 +107,10 @@ struct Impl {
     auto closure_id = this->mod.closures.size();
     this->mod_stack.push_back(this->mod.closures.size());
     this->mod.closures.push_back(Closure { 0, {} });
-    if(global)
-      this->scope_stack.push_back(NameScope { }); // Global space
-    else
-      this->scope_stack.push_back(NameScope { this->scope_stack.back() });
+    auto new_ns = global
+      ? make_shared<NameScope>() // Global
+      : make_shared<NameScope>(this->scope_stack.back());
+    this->scope_stack.push_back(move(new_ns));
     return closure_id;
   }
 
@@ -231,18 +232,22 @@ struct Impl {
     return ret;
   }
 
-  void run(const vector<Stmt> &stmts) {
+  void run_stmts(const vector<Stmt> &stmts) {
     for(auto &c: stmts)
-      this->run(c);
+      this->run_stmt(c);
   }
 
-  void run(const Stmt &stmt) {
+  void run_stmt(const Stmt &stmt) { // Prevent recur
     match(stmt, [&](const auto &stmt) {
       this->run(stmt);
     });
   }
 
   void run(const StmtPass &) {}
+
+  void run(const StmtGlobal &) {} // Preprocessed
+
+  void run(const StmtNonlocal &) {} // Preprocessed
 
   void run(const StmtExpr &stmt) {
     this->eval(stmt.expr);
@@ -357,7 +362,7 @@ struct Impl {
     this->local_preresolve(stmt);
 
     this->load_args(stmt.args, stmt.rest_args);
-    this->run(stmt.body);
+    this->run_stmts(stmt.body);
 
     auto name_captured = this->pop_scope();
     vector<Local> local_captured;
@@ -377,7 +382,7 @@ struct Impl {
       if(arg.default_)
         defaults.push_back(this->eval(*arg.default_));
     auto tup_defaults = this->eval_tuple(move(defaults));
-    this->eval_builtin_call("setattr3", SEQ3(
+    this->eval_intrinsic_call(Intrinsic::setattr3, SEQ3(
       Local { f.id }, // Borrow
       this->eval(ImmStr { "__defaults__" }),
       move(tup_defaults)
@@ -386,6 +391,14 @@ struct Impl {
   }
 
   void load_args(const vector<FuncArg> &args, const optional<Str> &rest_args) {
+    if(args.empty()) {
+      if(rest_args) {
+        auto args = this->eval_intrinsic_call(Intrinsic::v_args0, SEQ0());
+        this->name_store(*rest_args, move(args));
+      }
+      return;
+    }
+
     auto real_args = this->eval_intrinsic_call(Intrinsic::v_args0, SEQ0());
     auto real_len = this->eval_intrinsic_call(Intrinsic::tuple_len1, SEQ1(
       Local { real_args.id } // Borrow
@@ -393,7 +406,7 @@ struct Impl {
 
     auto f_get_arg = [&](size_t idx) {
       return this->eval_intrinsic_call(Intrinsic::tuple_idx2, SEQ2(
-        this->eval_intrinsic_call(Intrinsic::v_args0, SEQ0()),
+        Local { real_args.id }, // Borrow
         this->eval(ImmInteger { Integer(idx) })
       ));
     };
@@ -579,7 +592,7 @@ unordered_map<Str, Intrinsic> Impl::IntrinsicReverseMap;
 Module HIRGen::operator()(const vector<Stmt> &stmts) const {
   try {
     Impl t {};
-    t.run(stmts);
+    t.run_stmts(stmts);
     auto captured = t.pop_scope();
     if(!captured.empty())
       throw HIRGenException { "Impossible: Global captures" };

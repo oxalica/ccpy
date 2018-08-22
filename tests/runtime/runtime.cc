@@ -45,7 +45,7 @@ int main() {
     HIRRunner runner { mod, cin, cout };
     runner.run();
   } catch(HIRRuntimeException e) {
-    cout << "HIR error: " << e.what() << "\n";
+    cout << "HIR runtime error: " << e.what() << "\n";
   } catch(IntrinsicException e) {
     cout << "Intrinsic error: " << e.what() << "\n";
   }

@@ -1,0 +1,6 @@
+def f():
+  a = 1
+  def g():
+    def h():
+      nonlocal a
+    global a

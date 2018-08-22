@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <exception>
+#include <memory>
 #include <vector>
 #include "../util/adt.h"
 #include "../util/macro.h"
@@ -21,7 +22,7 @@ DECL_TAGGED_UNION(NameKind, NAME_KIND_LIST)
 class NameScope {
 public:
   NameScope();
-  explicit NameScope(NameScope &parent);
+  explicit NameScope(const std::shared_ptr<NameScope> &parent);
   ~NameScope() noexcept;
   NameScope(NameScope &&) noexcept;
 

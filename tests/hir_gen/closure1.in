@@ -1,0 +1,37 @@
+def _1(): pass
+def _2(x): return x + 1
+def _3(x): return y + 1
+
+def _4():
+  def _5():
+    return a
+  return
+  a = 9
+
+def _6():
+  a = 1
+
+def _7():
+  global a
+  a = 1
+
+def _8():
+  def _9():
+    nonlocal b
+    b = 1
+  b = 2
+
+def _10():
+  a = 1
+  def _11():
+    def _12():
+      nonlocal a
+      a = 2
+    def _13():
+      return a
+    def _14():
+      a = 2
+
+def _15(a):
+  def _16(b):
+    return a + b

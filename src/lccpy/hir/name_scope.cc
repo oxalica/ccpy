@@ -8,13 +8,13 @@ using namespace std;
 namespace ccpy::hir {
 
 struct NameScope::Impl {
-  optional<NameScope &> parent;
+  optional<shared_ptr<NameScope>> parent;
   unordered_map<Str, NameKind> names;
   vector<Str> captured;
   vector<bool> local_alloc;
 
   Impl(): parent({}) {}
-  Impl(NameScope &_parent): parent(_parent) {}
+  Impl(const shared_ptr<NameScope> &_parent): parent(move(_parent)) {}
 
   size_t new_capture(const Str &name) {
     this->captured.push_back(name);
@@ -22,9 +22,20 @@ struct NameScope::Impl {
   }
 
   void mark_nonlocal(const Str &name) {
-    auto it = this->names
-      .insert({ name, NameCapture { this->new_capture(name) } })
-      .first;
+    auto it = this->names.find(name);
+    if(it == this->names.end()) {
+      it = this->names
+        .insert({ name, NameCapture { this->new_capture(name) } })
+        .first;
+
+      auto par = this->parent ? (*this->parent)->get(name) : NameGlobal {};
+      auto is_global = match<bool>(par
+      , [&](const NameGlobal &) { return true; }
+      , [&](const auto &) { return false; }
+      );
+      if(is_global)
+        throw NameResolveException { "Cannot find nonlocal in ancestor scopes" };
+    }
     match(it->second
     , [](const NameCapture &) {}
     , [](const NameGlobal &) {
@@ -50,13 +61,14 @@ struct NameScope::Impl {
   }
 
   void mark_local(const Str &name) {
-    this->names.insert({ name, NameLocal { this->new_local() } });
+    if(this->names.find(name) == this->names.end())
+      this->names.insert({ name, NameLocal { this->new_local() } });
   }
 
   NameKind get(const Str &name) {
     auto it = this->names.find(name);
     if(it == this->names.end()) { // Implicit capture
-      auto par = this->parent ? this->parent->get(name) : NameGlobal {};
+      auto par = this->parent ? (*this->parent)->get(name) : NameGlobal {};
       auto ret = match<NameKind>(par
       , [&](const NameGlobal &) { return NameGlobal {}; }
       , [&](const auto &) { return NameCapture { this->new_capture(name) }; }
@@ -86,7 +98,7 @@ struct NameScope::Impl {
 NameScope::NameScope()
   : pimpl(Impl {}) {}
 
-NameScope::NameScope(NameScope &parent)
+NameScope::NameScope(const shared_ptr<NameScope> &parent)
   : pimpl(Impl { parent }) {}
 
 NameScope::NameScope(NameScope &&ri) noexcept
