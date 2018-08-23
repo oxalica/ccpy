@@ -20,11 +20,13 @@ DECL_TAGGED_UNION(Literal, LITERAL_LIST)
 
 #define UNARY_OP_LIST(F) \
   F(Pos, "pos") F(Neg, "neg") F(Inv, "inv") \
+  F(LogNot, "not") \
 
 DECL_REFL_ENUM(UnaryOp, UNARY_OP_LIST)
 
 #define BINARY_OP_LIST(F) \
   F(Add, "add") F(Sub, "sub") F(Mul, "mul") F(Div, "div") F(Mod, "mod") \
+  F(LogAnd, "and") F(LogOr, "or") \
 
 DECL_REFL_ENUM(BinaryOp, BINARY_OP_LIST)
 
@@ -37,6 +39,7 @@ DECL_REFL_ENUM(BinaryOp, BINARY_OP_LIST)
   F(ExprTuple, { std::vector<Expr> elems; }) \
   F(ExprUnary, { UnaryOp op; owned<Expr> expr; }) \
   F(ExprBinary, { BinaryOp op; owned<Expr> lexpr, rexpr; }) \
+  F(ExprCond, { owned<Expr> cond, then_expr, else_expr; }) \
 
 DECL_TAGGED_UNION(Expr, EXPR_LIST)
 

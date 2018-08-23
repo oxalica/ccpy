@@ -581,11 +581,38 @@ struct Impl {
   }
 
   Local eval(const ExprBinary &expr) {
-    Str op_str { BinaryOpMap[static_cast<size_t>(expr.op)] };
-    return this->eval_builtin_call(move(op_str), SEQ2(
-      this->eval(*expr.lexpr),
-      this->eval(*expr.rexpr)
-    ));
+    auto lvalue = this->eval(*expr.lexpr);
+    if(expr.op == BinaryOp::LogAnd)
+      return this->eval_cond(
+        this->eval_not(Local { lvalue.id }), // Borrow
+        [&]() { return move(lvalue); }, // falsy
+        [&]() { return this->eval(*expr.rexpr); } // truth
+      );
+    else if(expr.op == BinaryOp::LogOr)
+      return this->eval_cond(
+        this->eval_not(Local { lvalue.id }), // Borrow
+        [&]() { return this->eval(*expr.rexpr); }, // falsy
+        [&]() { return move(lvalue); } // truth
+      );
+    else {
+      Str op_str { BinaryOpMap[static_cast<size_t>(expr.op)] };
+      return this->eval_builtin_call(move(op_str), SEQ2(
+        move(lvalue),
+        this->eval(*expr.rexpr)
+      ));
+    }
+  }
+
+  Local eval(const ExprCond &expr) {
+    return this->eval_cond(
+      this->eval_not(this->eval(*expr.cond)),
+      [&]() { return this->eval(*expr.else_expr); }, // falsy
+      [&]() { return this->eval(*expr.then_expr); } // truth
+    );
+  }
+
+  Local eval_not(Local &&x) {
+    return this->eval_builtin_call("not", SEQ1(move(x)));
   }
 };
 

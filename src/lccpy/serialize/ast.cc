@@ -104,6 +104,12 @@ static Structual trans(const Expr &expr) {
       trans(*expr.lexpr),
       trans(*expr.rexpr),
     } };
+  }, [](const ExprCond &expr) {
+    return StructParen { "ExprCond", {
+      trans(*expr.cond),
+      trans(*expr.then_expr),
+      trans(*expr.else_expr),
+    } };
   }
   );
 }
