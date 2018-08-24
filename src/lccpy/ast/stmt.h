@@ -36,6 +36,7 @@ struct FuncArg {
     optional<Str> rest_args; \
     std::vector<Stmt> body; \
   }) \
+  F(StmtIf, { Expr cond; std::vector<Stmt> thens, elses; }) \
 
 DECL_TAGGED_UNION(Stmt, STMT_LIST)
 

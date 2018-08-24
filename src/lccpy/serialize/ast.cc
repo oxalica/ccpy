@@ -155,6 +155,13 @@ static Structual trans(const Stmt &stmt) {
       trans(stmt.body),
     } };
   }
+  , [](const StmtIf &stmt) {
+    return StructParen { "StmtIf", {
+      trans(stmt.cond),
+      trans(stmt.thens),
+      trans(stmt.elses),
+    } };
+  }
   );
 }
 

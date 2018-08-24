@@ -212,14 +212,23 @@ struct Impl {
   template<typename T, typename F>
   Local eval_cond(Local &&cond, T f_true, F f_false) {
     auto ret = this->new_local();
+    this->run_cond(
+      move(cond),
+      [&]() { this->store(Local { ret.id }, f_true()); },
+      [&]() { this->store(Local { ret.id }, f_false()); }
+    );
+    return move(ret);
+  }
 
+  template<typename T, typename F>
+  void run_cond(Local &&cond, T f_true, F f_false) {
     auto begin_jmp = this->cur_pos();
     *this << HIRJF { move(cond), 0 }; // Placeholder
-    this->store(Local { ret.id }, f_true());
+    f_true();
     auto const_false = this->eval(ImmBool { false });
     auto mid_jmp = this->cur_pos();
     *this << HIRJF { move(const_false), 0 }; // Placeholder
-    this->store(Local { ret.id }, f_false());
+    f_false();
     auto end_pos = this->cur_pos();
 
     match(this->closure().hirs[begin_jmp]
@@ -230,8 +239,6 @@ struct Impl {
     , [&](HIRJF &hir) { hir.target = end_pos; }
     , [&](auto &) { throw HIRGenException { "Impossible: JF2 locate fail" }; }
     );
-
-    return ret;
   }
 
   void run_stmts(const vector<Stmt> &stmts) {
@@ -392,6 +399,33 @@ struct Impl {
     };
 
     this->pat_store(PatName { stmt.name }, move(tup_defaults));
+  }
+
+  void run(const StmtIf &stmt) {
+    // Hack for avoiding calling `__builtin__not`
+    auto is_wrapped = match<bool>(stmt.cond
+    , [&](const ExprCall &expr) {
+      return match<bool>(*expr.func
+      , [&](const ExprName &func) { return func.name == "__intrinsic__not1"; }
+      , [&](const auto &) { return false; }
+      );
+    }
+    , [&](const auto &) { return false; }
+    );
+
+    auto cond = this->eval(stmt.cond);
+    if(is_wrapped)
+      this->run_cond(
+        move(cond),
+        [&]() { this->run_stmts(stmt.thens); }, // truth
+        [&]() { this->run_stmts(stmt.elses); } // falsy
+      );
+    else
+      this->run_cond(
+        this->eval_not(move(cond)),
+        [&]() { this->run_stmts(stmt.elses); }, // falsy
+        [&]() { this->run_stmts(stmt.thens); } // truth
+      );
   }
 
   void load_args(const vector<FuncArg> &args, const optional<Str> &rest_args) {

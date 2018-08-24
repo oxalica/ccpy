@@ -84,6 +84,10 @@ SIG(id1) { ARGS(id1, 1)
   return new_obj(ObjInt { Integer(args[0].get()) });
 }
 
+SIG(not1) { ARGS(not1, 1)
+  return args[0].get() == this->false_.get() ? this->true_ : this->false_;
+}
+
 SIG(repr1) { ARGS(repr1, 1)
   auto s = ObjectSerializer {}(args[0]);
   return new_obj(ObjStr { move(s) });

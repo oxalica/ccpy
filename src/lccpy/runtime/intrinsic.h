@@ -16,6 +16,7 @@ namespace ccpy::runtime {
   F(0, get_global) \
   F(2, is) \
   F(1, id) \
+  F(1, not) \
   F(1, repr) \
   F(3, getattr) \
   F(3, setattr) \
