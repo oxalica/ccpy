@@ -108,5 +108,89 @@ Start(Local size = 8):
 106: %2 = __intrinsic__dict_get3(%2, %3, %4)
 107: %0 = __intrinsic__tuple_make_(%0, %1)
 108: %0 = __intrinsic__v_call2(%2, %0)
+109: %0 = 1
+110: %1 = __intrinsic__get_global0()
+111: %2 = "__builtin__not"
+112: %3 = None
+113: %1 = __intrinsic__dict_get3(%1, %2, %3)
+114: %2 = __intrinsic__tuple_make_(%0)
+115: %1 = __intrinsic__v_call2(%1, %2)
+116: JmpIfFalse %1 <120>
+117: %2 = %0
+118: %0 = False
+119: JmpIfFalse %0 <134>
+120: %3 = 2
+121: %4 = __intrinsic__get_global0()
+122: %5 = "__builtin__not"
+123: %6 = None
+124: %4 = __intrinsic__dict_get3(%4, %5, %6)
+125: %5 = __intrinsic__tuple_make_(%3)
+126: %4 = __intrinsic__v_call2(%4, %5)
+127: JmpIfFalse %4 <131>
+128: %5 = %3
+129: %3 = False
+130: JmpIfFalse %3 <133>
+131: %6 = 3
+132: %5 = %6
+133: %2 = %5
+134: %0 = 1
+135: %1 = __intrinsic__get_global0()
+136: %2 = "__builtin__not"
+137: %3 = None
+138: %1 = __intrinsic__dict_get3(%1, %2, %3)
+139: %2 = __intrinsic__tuple_make_(%0)
+140: %1 = __intrinsic__v_call2(%1, %2)
+141: JmpIfFalse %1 <158>
+142: %3 = 2
+143: %4 = __intrinsic__get_global0()
+144: %5 = "__builtin__not"
+145: %6 = None
+146: %4 = __intrinsic__dict_get3(%4, %5, %6)
+147: %5 = __intrinsic__tuple_make_(%3)
+148: %4 = __intrinsic__v_call2(%4, %5)
+149: JmpIfFalse %4 <153>
+150: %5 = %3
+151: %3 = False
+152: JmpIfFalse %3 <155>
+153: %6 = 3
+154: %5 = %6
+155: %2 = %5
+156: %3 = False
+157: JmpIfFalse %3 <159>
+158: %2 = %0
+159: %0 = 1
+160: %1 = __intrinsic__get_global0()
+161: %2 = "__builtin__not"
+162: %3 = None
+163: %1 = __intrinsic__dict_get3(%1, %2, %3)
+164: %0 = __intrinsic__tuple_make_(%0)
+165: %0 = __intrinsic__v_call2(%1, %0)
+166: %0 = 1
+167: %1 = __intrinsic__get_global0()
+168: %2 = "__builtin__not"
+169: %3 = None
+170: %1 = __intrinsic__dict_get3(%1, %2, %3)
+171: %0 = __intrinsic__tuple_make_(%0)
+172: %0 = __intrinsic__v_call2(%1, %0)
+173: %1 = __intrinsic__get_global0()
+174: %2 = "__builtin__not"
+175: %3 = None
+176: %1 = __intrinsic__dict_get3(%1, %2, %3)
+177: %0 = __intrinsic__tuple_make_(%0)
+178: %0 = __intrinsic__v_call2(%1, %0)
+179: %0 = 2
+180: %1 = __intrinsic__get_global0()
+181: %2 = "__builtin__not"
+182: %3 = None
+183: %1 = __intrinsic__dict_get3(%1, %2, %3)
+184: %0 = __intrinsic__tuple_make_(%0)
+185: %0 = __intrinsic__v_call2(%1, %0)
+186: JmpIfFalse %0 <191>
+187: %2 = 3
+188: %1 = %2
+189: %2 = False
+190: JmpIfFalse %2 <193>
+191: %3 = 1
+192: %1 = %3
 
 
