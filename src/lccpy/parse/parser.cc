@@ -20,7 +20,8 @@ bool is_expr_begin(OptTokRef tok) {
   , [](const TokString &) { return true; }
   , [](const TokKeyword &tok) {
     switch(tok.keyword) {
-      case Keyword::True: case Keyword::False: case Keyword::None:
+      case Keyword::True: case Keyword::False: case Keyword::None: // Literal
+      case Keyword::Not: // Unary op
         return true;
       default:
         return false;
@@ -45,6 +46,15 @@ bool is_symbol(OptTokRef tok, Symbol sym) {
     return false;
   return match<bool>(*tok,
     [=](const TokSymbol &tok) { return tok.symbol == sym; },
+    [](const auto &) { return false; }
+  );
+}
+
+bool is_keyword(OptTokRef tok, Keyword kw) {
+  if(!tok)
+    return false;
+  return match<bool>(*tok,
+    [=](const TokKeyword &tok) { return tok.keyword == kw; },
     [](const auto &) { return false; }
   );
 }
@@ -126,6 +136,13 @@ struct Parser::Impl {
   void expect_symbol(const char msg[], Symbol sym) {
     this->expect(msg, false
     , [=](TokSymbol &&tok) { return tok.symbol == sym; }
+    , [](auto &&) { return false; }
+    );
+  }
+
+  void expect_keyword(const char msg[], Keyword kw) {
+    this->expect(msg, false
+    , [=](TokKeyword &&tok) { return tok.keyword == kw; }
     , [](auto &&) { return false; }
     );
   }
@@ -373,7 +390,53 @@ struct Parser::Impl {
   }
 
   Expr get_expr() {
-    return this->get_expr_val();
+    return this->get_expr_cond();
+  }
+
+  Expr get_expr_cond() {
+    Expr c = this->get_expr_logic1();
+    if(!is_keyword(this->is.peek(), Keyword::If))
+      return move(c);
+    this->is.get();
+
+    auto cond = this->get_expr_logic1(); // No recur in `cond`
+    this->expect_keyword("Expect `else` in condition expr", Keyword::Else);
+    auto else_expr = this->get_expr_cond(); // Recur in `else_expr`
+    return ExprCond { move(cond), move(c), move(else_expr) };
+  }
+
+  Expr get_expr_logic1() {
+    Expr c = this->get_expr_logic2();
+    if(!is_keyword(this->is.peek(), Keyword::Or))
+      return move(c);
+    this->is.get();
+
+    return ExprBinary {
+      BinaryOp::LogOr,
+      move(c),
+      this->get_expr_logic1(), // Recur
+    };
+  }
+
+  Expr get_expr_logic2() {
+    Expr ret = this->get_expr_logic3();
+    if(!is_keyword(this->is.peek(), Keyword::And))
+      return ret;
+    this->is.get();
+
+    return ExprBinary {
+      BinaryOp::LogAnd,
+      move(ret),
+      this->get_expr_logic2(), // Recur
+    };
+  }
+
+  Expr get_expr_logic3() {
+    if(!is_keyword(this->is.peek(), Keyword::Not))
+      return this->get_expr_val();
+    this->is.get();
+
+    return ExprUnary { UnaryOp::LogNot, this->get_expr_logic3() }; // Recur
   }
 
   Expr get_expr_val() {

@@ -28,4 +28,12 @@ Name("b")
 Symbol("=")
 Name("c")
 Newline
+Keyword("if")
+Name("then")
+Keyword("else")
+Keyword("elif")
+Keyword("and")
+Keyword("or")
+Keyword("not")
+Newline
 End

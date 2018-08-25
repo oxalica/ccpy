@@ -18,6 +18,7 @@ struct Span {
   F(Try, "try") F(Except, "except") F(Raise, "raise") \
   F(Global, "global") F(Nonlocal, "nonlocal") \
   F(If, "if") F(Elif, "elif") F(Else, "else") \
+  F(Not, "not") F(And, "and") F(Or, "or") \
   F(While, "while") F(For, "for") \
   F(Break, "break") F(Continue, "continue") \
   F(In, "in") \

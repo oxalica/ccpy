@@ -29,4 +29,7 @@ StmtDef("h", [], Some("xs"), [StmtReturn(Some(ExprName("xs")))])
 StmtDef("i", [("a", None), ("b", Some(ExprBinary("add", ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2)))))], Some("xs"), [StmtReturn(None)])
 StmtDef("j", [], None, [StmtPass])
 StmtDef("k", [], None, [StmtExpr(ExprLiteral(LitInteger(1))), StmtDef("l", [], None, [StmtReturn(None)]), StmtReturn(Some(ExprName("l")))])
+StmtExpr(ExprCond(ExprLiteral(LitInteger(2)), ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(3))))
+StmtExpr(ExprCond(ExprLiteral(LitInteger(2)), ExprLiteral(LitInteger(1)), ExprCond(ExprLiteral(LitInteger(4)), ExprLiteral(LitInteger(3)), ExprLiteral(LitInteger(5)))))
+StmtExpr(ExprBinary("or", ExprBinary("and", ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2))), ExprBinary("and", ExprUnary("not", ExprLiteral(LitInteger(3))), ExprBinary("and", ExprUnary("not", ExprUnary("not", ExprLiteral(LitInteger(4)))), ExprLiteral(LitInteger(5))))))
 End

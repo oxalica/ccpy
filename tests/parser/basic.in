@@ -34,3 +34,7 @@ def k():
   def l():
     return
   return l
+
+1 if 2 else 3
+1 if 2 else 3 if 4 else 5
+1 and 2 or not 3 and not not 4 and 5

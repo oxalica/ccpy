@@ -5,3 +5,4 @@ True False None
 34"
 'a\n"b\'' "\"3'9\\"
 a = b = c
+if then else elif and or not

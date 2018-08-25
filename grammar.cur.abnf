@@ -22,8 +22,11 @@ flow_stmt = "return" [expr_list]
 compound_stmt = funcdef
 funcdef = "def" NAME "(" [argdeflist] ")" ":" suite
 suite = simple_stmt / NEWLINE INDENT *stmt DEDENT
-argdeflist = argdef *("," argdef)
-argdef = NAME ["=" expr]
+argdeflist = *(arg_normal ",") *(arg_default ",") (arg_default / arg_rest) [","]
+           / *(arg_normal ",") arg_normal [","]
+arg_normal = NAME
+arg_default = NAME "=" expr
+arg_rest = "*" NAME
 
 ; Assignable expression
 pat_list = pat *("," pat) [","]
@@ -33,7 +36,11 @@ pat = "(" pat_list ")"
 
 ; Expression
 expr_list = expr *("," expr) [","]
-expr = expr_val
+expr = expr_cond
+expr_cond = expr_logic1 *("if" expr_logic1 "else") expr_logic1
+expr_logic1 = expr_logic2 *("or" expr_logic2)
+expr_logic2 = expr_logic3 *("and" expr_logic3)
+expr_logic3 = *"not" expr_val
 expr_val = expr_term *(("+" / "-") expr_term)
 expr_term = expr_factor *(("*" / "/" / "%") expr_factor)
 expr_factor = ("+" / "-" / "~") expr_atom
