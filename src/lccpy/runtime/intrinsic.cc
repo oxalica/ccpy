@@ -30,7 +30,7 @@ T &expect(CObj x, const char *reason) {
 
 #define TO_STR(X) #X
 #define INTRINSIC_NAME_STR(NARG, NAME) "__intrinsic__" TO_STR(NAME ## NARG),
-#define INTRINSIC_METHOD(NARG, NAME) IntrinsicMod::NAME ## NARG,
+#define INTRINSIC_METHOD(NARG, NAME) &IntrinsicMod::NAME ## NARG,
 
 const char *IntrinsicNameMap[INTRINSIC_COUNT] = {
   INTRINSIC_LIST(INTRINSIC_NAME_STR)
