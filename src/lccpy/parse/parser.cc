@@ -69,17 +69,6 @@ bool is_param_begin(OptTokRef tok) {
   );
 }
 
-bool is_line_end(OptTokRef tok) {
-  if(!tok)
-    return true;
-  return match<bool>(*tok
-  , [](const TokNewline &) { return true; }
-  , [](const TokDedent &) { return true; }
-  , [](const TokIndent &) { return true; }
-  , [](const auto &) { return false; }
-  );
-}
-
 Pat expr_to_pat(Expr &&expr) {
   return match<Pat>(move(expr)
   , [](ExprName &&expr) { return PatName { move(expr.name) }; }
@@ -133,6 +122,13 @@ struct Parser::Impl {
     );
   }
 
+  bool try_eat_keyword(Keyword kw) {
+    return this->try_eat(
+      false,
+      [=](const TokKeyword &tok) { return tok.keyword == kw; }
+    );
+  }
+
   void expect_symbol(const char msg[], Symbol sym) {
     this->expect(msg, false
     , [=](TokSymbol &&tok) { return tok.symbol == sym; }
@@ -156,9 +152,13 @@ struct Parser::Impl {
     return ret;
   }
 
-  void expect_line_end(const char msg[]) {
-    if(!is_line_end(this->is.peek()))
-      throw StreamFailException { msg };
+  void expect_newline() {
+    this->expect(
+      "Expect newline",
+      false,
+      [](TokNewline &&) { return true; },
+      [](auto &&) { return false; }
+    );
   }
 
   vector<Stmt> get_stmt_or_suite() {
@@ -180,51 +180,34 @@ struct Parser::Impl {
       [](TokIndent &&) { return true; },
       [](auto &&) { return false; }
     );
-    while(nxt = this->is.peek()) {
-      this->eat_newlines();
-      bool is_dedent = this->try_eat(
-        false,
-        [](const TokDedent &) { return true; }
-      );
-      if(is_dedent)
-        return move(ret);
+    do
       ret.push_back(this->get_stmt());
-    }
-    throw StreamFailException { "Expect stmt or dedent, found EOF" };
+    while(!this->try_eat(true, [](const TokDedent &) { return true; }));
+    return ret;
   }
 
   optional<Stmt> try_get_stmt() {
-    this->eat_newlines();
-
-    auto nxt = this->is.peek();
-    if(!nxt)
+    if(!this->is.peek())
       return {};
     return this->get_stmt();
   }
 
-  void eat_newlines() {
-    while(this->try_eat(false, [](const TokNewline &) { return true; }))
-      ;
-  }
-
   Stmt get_stmt() {
-    this->eat_newlines();
-
     auto nxt = this->is.peek();
     if(!nxt)
       throw StreamFailException { "Expect stmt, found EOF" };
 
     if(is_expr_begin(nxt))
       return this->get_stmt_ahead_expr();
-    else
-      return match<Stmt>(*nxt
-      , [&](const TokKeyword &tok) {
-        return this->get_stmt_ahead_kw(tok.keyword);
-      }
-      , [&](const auto &) -> Stmt {
-        throw StreamFailException { "Unexpected token for stmt" };
-      }
-      );
+
+    return match<Stmt>(*nxt
+    , [&](const TokKeyword &tok) {
+      return this->get_stmt_ahead_kw(tok.keyword);
+    }
+    , [&](const auto &) -> Stmt {
+      throw StreamFailException { "Unexpected token for stmt" };
+    }
+    );
   }
 
   Stmt get_stmt_ahead_expr() {
@@ -237,7 +220,7 @@ struct Parser::Impl {
         throw StreamFailException { "Empty expr" };
       expr = move(*c);
     }
-    this->expect_line_end("Expect newline after expr stmt");
+    this->expect_newline();
     if(pats.empty())
       return StmtExpr { move(expr) };
     return StmtAssign { move(pats), move(expr) };
@@ -247,27 +230,27 @@ struct Parser::Impl {
     switch(kw) {
       case Keyword::Pass:
         this->is.get();
-        this->expect_line_end("Expect newline after pass stmt");
+        this->expect_newline();
         return StmtPass {};
 
       case Keyword::Del: {
         this->is.get();
         auto pat = this->get_pat();
-        this->expect_line_end("Expect newline after del stmt");
+        this->expect_newline();
         return StmtDel { move(pat) };
       }
 
       case Keyword::Nonlocal: {
         this->is.get();
         auto names = this->get_name_list();
-        this->expect_line_end("Expect newline after nonlocal stmt");
+        this->expect_newline();
         return StmtNonlocal { move(names) };
       }
 
       case Keyword::Global: {
         this->is.get();
         auto names = this->get_name_list();
-        this->expect_line_end("Expect newline after global stmt");
+        this->expect_newline();
         return StmtGlobal { move(names) };
       }
 
@@ -276,14 +259,14 @@ struct Parser::Impl {
         auto c = this->get_expr_list_maybe_tuple();
         if(!c)
           throw StreamFailException { "Raise without value is unsupported" };
-        this->expect_line_end("Expect newline after raise stmt");
+        this->expect_newline();
         return StmtRaise { move(*c) };
       }
 
       case Keyword::Return: {
         this->is.get();
         auto c = this->get_expr_list_maybe_tuple();
-        this->expect_line_end("Expect newline after return stmt");
+        this->expect_newline();
         return StmtReturn { move(c) };
       }
 

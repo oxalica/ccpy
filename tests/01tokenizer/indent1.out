@@ -5,6 +5,7 @@ Name("b")
 Newline
 Indent
 Name("c")
+Newline
 Dedent
 Dedent
 End

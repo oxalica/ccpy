@@ -91,7 +91,7 @@ struct Tokenizer::Impl {
   }
 
   optional<Token> get() {
-    if(!this->last_newline && this->expect_eat('\n')) {
+    if(!this->last_newline && (!this->is.peek() || this->expect_eat('\n'))) {
       this->last_newline = true;
       return TokNewline {};
     }
@@ -103,6 +103,8 @@ struct Tokenizer::Impl {
       } while(this->expect_eat('\n')); // Then empty lines are skipped
     }
     if(this->cur_indent < this->indents.back()) {
+      if(!this->is.peek()) // If already EOF
+        this->last_newline = true;
       this->indents.pop_back();
       return TokDedent {};
     }
