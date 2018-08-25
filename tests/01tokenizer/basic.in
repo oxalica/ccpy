@@ -6,3 +6,7 @@ True False None
 'a\n"b\'' "\"3'9\\"
 a = b = c
 if then else elif and or not
+
+if a: b
+elif c: d
+else: e

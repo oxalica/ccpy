@@ -32,4 +32,8 @@ StmtDef("k", [], None, [StmtExpr(ExprLiteral(LitInteger(1))), StmtDef("l", [], N
 StmtExpr(ExprCond(ExprLiteral(LitInteger(2)), ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(3))))
 StmtExpr(ExprCond(ExprLiteral(LitInteger(2)), ExprLiteral(LitInteger(1)), ExprCond(ExprLiteral(LitInteger(4)), ExprLiteral(LitInteger(3)), ExprLiteral(LitInteger(5)))))
 StmtExpr(ExprBinary("or", ExprBinary("and", ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2))), ExprBinary("and", ExprUnary("not", ExprLiteral(LitInteger(3))), ExprBinary("and", ExprUnary("not", ExprUnary("not", ExprLiteral(LitInteger(4)))), ExprLiteral(LitInteger(5))))))
+StmtIf(ExprLiteral(LitInteger(1)), [StmtExpr(ExprLiteral(LitInteger(2)))], [])
+StmtIf(ExprLiteral(LitInteger(3)), [StmtExpr(ExprLiteral(LitInteger(4)))], [StmtExpr(ExprLiteral(LitInteger(5)))])
+StmtIf(ExprLiteral(LitInteger(6)), [StmtExpr(ExprLiteral(LitInteger(7)))], [StmtIf(ExprLiteral(LitInteger(8)), [StmtExpr(ExprLiteral(LitInteger(9)))], [])])
+StmtIf(ExprLiteral(LitInteger(10)), [StmtExpr(ExprLiteral(LitInteger(11)))], [StmtIf(ExprLiteral(LitInteger(12)), [StmtExpr(ExprLiteral(LitInteger(13)))], [StmtIf(ExprLiteral(LitInteger(14)), [StmtIf(ExprLiteral(LitInteger(16)), [StmtExpr(ExprLiteral(LitInteger(17)))], [])], [StmtExpr(ExprLiteral(LitInteger(18)))])])])
 End

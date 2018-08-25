@@ -54,3 +54,28 @@ b = f()
 print(a(), a())
 print(b())
 print(a())
+
+def __builtin__not(obj):
+  print_s('__builtin__not')
+  return __intrinsic__not1(obj)
+
+def cond(a):
+  s = ''
+  print_s('--')
+  if __intrinsic__not1(a): # No builtin call
+    s = s + 'F'
+  else:
+    s = s + 'T'
+  print_s('--')
+  if not a: # 2 builtin call
+    s = s + 'F'
+  else:
+    s = s + 'T'
+  print_s('--')
+  s = s + ('T' if a else 'F') # 1 builtin call
+  return s
+
+print_s()
+print(cond(True, True), cond(False, True)) # 4 builtin call
+print(cond(1), cond(0)) # `0` as Truth due to `__builtin__not` here
+

@@ -38,3 +38,19 @@ def k():
 1 if 2 else 3
 1 if 2 else 3 if 4 else 5
 1 and 2 or not 3 and not not 4 and 5
+
+if 1: 2
+
+if 3: 4
+else: 5
+
+if 6: 7
+elif 8: 9
+
+if 10: 11
+elif 12: 13
+elif 14:
+  if 16:
+    17
+else:
+  18

@@ -273,9 +273,27 @@ struct Parser::Impl {
       case Keyword::Def:
         return this->get_stmt_ahead_def(); // Already eat newline
 
+      case Keyword::If:
+        this->is.get();
+        return this->get_stmt_after_if(); // Already eat newline
+
       default:
         throw StreamFailException { "Unexpected keyword for stmt" };
     }
+  }
+
+  Stmt get_stmt_after_if() {
+    auto cond = this->get_expr();
+    this->expect_symbol("Expect `:` after if condition", Symbol::Colon);
+    auto thens = this->get_stmt_or_suite();
+    vector<Stmt> elses {};
+    if(this->try_eat_keyword(Keyword::Elif)) {
+      elses.push_back(this->get_stmt_after_if());
+    } else if(this->try_eat_keyword(Keyword::Else)) {
+      this->expect_symbol("Expect `:` after `else`", Symbol::Colon);
+      elses = this->get_stmt_or_suite();
+    }
+    return StmtIf { move(cond), move(thens), move(elses) };
   }
 
   Stmt get_stmt_ahead_def() {
