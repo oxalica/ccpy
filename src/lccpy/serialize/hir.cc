@@ -84,7 +84,9 @@ Str HIRSerializer::operator()(const HIR &hir) const {
 
 Str HIRSerializer::operator()(const Closure &closure) const {
   Str ret;
+  size_t idx = 0;
   for(auto &c: closure.hirs) {
+    ret += IntegerSerializer {}(Integer(idx++)) + ": ";
     ret += trans(c);
     ret += "\n";
   }

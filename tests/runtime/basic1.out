@@ -1,11 +1,11 @@
 Start(Local size = 3):
-%0 = True
-%1 = False
-%2 = None
-%2 = __intrinsic__tuple_make_(%2)
-%0 = __intrinsic__tuple_make_(%0, %1, %2)
-%0 = 1
-%0 = __intrinsic__id1(%0)
+0: %0 = True
+1: %1 = False
+2: %2 = None
+3: %2 = __intrinsic__tuple_make_(%2)
+4: %0 = __intrinsic__tuple_make_(%0, %1, %2)
+5: %0 = 1
+6: %0 = __intrinsic__id1(%0)
 
 
 Done

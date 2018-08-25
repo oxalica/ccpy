@@ -1,37 +1,37 @@
 Start(Local size = 3):
-%0 = 1
-%0 = __intrinsic__tuple_make_(%0)
-%0 = Closure #1() defaults = %0
-%1 = __intrinsic__get_global0()
-%2 = "f"
-%0 = __intrinsic__dict_set3(%1, %2, %0)
+0: %0 = 1
+1: %0 = __intrinsic__tuple_make_(%0)
+2: %0 = Closure #1() defaults = %0
+3: %1 = __intrinsic__get_global0()
+4: %2 = "f"
+5: %0 = __intrinsic__dict_set3(%1, %2, %0)
 
 
 Closure #1(Local size = 10):
-%3 = __intrinsic__v_args0()
-%4 = __intrinsic__tuple_len1(%3)
-%5 = 0
-%5 = __intrinsic__tuple_idx2(%3, %5)
-%0 = %5
-%5 = 1
-%5 = __intrinsic__int_lt2(%5, %4)
-JmpIfFalse %5 <13>
-%7 = 1
-%7 = __intrinsic__tuple_idx2(%3, %7)
-%6 = %7
-%7 = False
-JmpIfFalse %7 <17>
-%8 = __intrinsic__v_defaults0()
-%9 = 0
-%8 = __intrinsic__tuple_idx2(%8, %9)
-%6 = %8
-%1 = %6
-%5 = 2
-%6 = None
-%7 = None
-%3 = __intrinsic__tuple_slice4(%3, %5, %6, %7)
-%2 = %3
-%3 = None
-Return %3
+0: %3 = __intrinsic__v_args0()
+1: %4 = __intrinsic__tuple_len1(%3)
+2: %5 = 0
+3: %5 = __intrinsic__tuple_idx2(%3, %5)
+4: %0 = %5
+5: %5 = 1
+6: %5 = __intrinsic__int_lt2(%5, %4)
+7: JmpIfFalse %5 <13>
+8: %7 = 1
+9: %7 = __intrinsic__tuple_idx2(%3, %7)
+10: %6 = %7
+11: %7 = False
+12: JmpIfFalse %7 <17>
+13: %8 = __intrinsic__v_defaults0()
+14: %9 = 0
+15: %8 = __intrinsic__tuple_idx2(%8, %9)
+16: %6 = %8
+17: %1 = %6
+18: %5 = 2
+19: %6 = None
+20: %7 = None
+21: %3 = __intrinsic__tuple_slice4(%3, %5, %6, %7)
+22: %2 = %3
+23: %3 = None
+24: Return %3
 
 
