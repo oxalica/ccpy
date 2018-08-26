@@ -93,6 +93,16 @@ struct NameScope::Impl {
   void del_local(size_t id) {
     this->local_alloc[id] = false;
   }
+
+  auto get_locals() {
+    vector<pair<Str, size_t>> ret {};
+    for(auto &kv: this->names)
+      match(kv.second
+      , [&](const NameLocal &kind) { ret.emplace_back(kv.first, kind.id); }
+      , [&](const auto &) {}
+      );
+    return ret;
+  }
 };
 
 NameScope::NameScope()
@@ -140,6 +150,10 @@ vector<Str> &&NameScope::get_captured() {
 
 size_t NameScope::get_local_size() const {
   return pimpl->local_alloc.size();
+}
+
+vector<pair<Str, size_t>> NameScope::get_locals() const {
+  return pimpl->get_locals();
 }
 
 } // namespace ccpy::hir

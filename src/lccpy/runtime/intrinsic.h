@@ -46,6 +46,7 @@ namespace ccpy::runtime {
   F(3, dict_get) \
   F(3, dict_set) \
   F(2, dict_del) \
+  F(2, dict_update) \
   F(1, dict_to_tuple) \
   F(1, print) \
   F(0, flush) \

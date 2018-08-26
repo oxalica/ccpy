@@ -379,6 +379,16 @@ SIG(dict_del2) { ARGS(dict_del2, 3)
   return this->none;
 }
 
+SIG(dict_update2) { ARGS(dict_update2, 2)
+  auto &dict1 =
+    expect<ObjDict>(args[0], "Wrong first type for dict_update2").value;
+  auto &dict2 =
+    expect<ObjDict>(args[1], "Wrong second type for dict_update2").value;
+  for(auto &kv: dict2)
+    dict1.insert(kv);
+  return this->none;
+}
+
 SIG(dict_to_tuple1) { ARGS(dict_to_tuple1, 1)
   auto &dict = expect<ObjDict>(args[0], "Wrong dict type for dict_get3").value;
   vector<Obj> v;

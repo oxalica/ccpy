@@ -37,6 +37,11 @@ struct FuncArg {
     std::vector<Stmt> body; \
   }) \
   F(StmtIf, { Expr cond; std::vector<Stmt> thens, elses; }) \
+  F(StmtClass, { \
+    Str name; \
+    Expr base; \
+    std::vector<Stmt> body; \
+  }) \
 
 DECL_TAGGED_UNION(Stmt, STMT_LIST)
 

@@ -172,6 +172,13 @@ static Structual trans(const Stmt &stmt) {
       trans(stmt.elses),
     } };
   }
+  , [](const StmtClass &stmt) {
+    return StructBrace { "StmtClass", {
+      trans(stmt.name),
+      trans(stmt.base),
+      trans(stmt.body),
+    } };
+  }
   );
 }
 

@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <exception>
 #include <memory>
+#include <utility>
 #include <vector>
 #include "../util/adt.h"
 #include "../util/macro.h"
@@ -36,6 +37,8 @@ public:
 
   std::size_t new_local();
   void del_local(std::size_t);
+
+  std::vector<std::pair<Str, std::size_t>> get_locals() const;
 
   // Used after code (inside the scope) generating.
   const std::vector<Str> &get_captured() const;

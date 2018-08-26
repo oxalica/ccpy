@@ -38,17 +38,34 @@ static bool test_literal_truth(const Literal &lit) {
 static void fold(Stmt &stmt) {
   match(stmt
   , [](StmtPass &) {}
+  , [](StmtGlobal &) {}
+  , [](StmtNonlocal &) {}
   , [](StmtExpr &stmt) { fold(stmt.expr); }
   , [](StmtAssign &stmt) { fold(stmt.expr); }
   , [](StmtReturn &stmt) {
     if(stmt.value)
       fold(*stmt.value);
   }
+  , [](StmtRaise &stmt) {
+    fold(stmt.value);
+  }
+  , [](StmtDel &) {}
   , [](StmtDef &stmt) {
     for(auto &s: stmt.body)
       fold(s);
   }
-  , [](auto &) {}
+  , [](StmtIf &stmt) {
+    fold(stmt.cond);
+    for(auto &c: stmt.thens)
+      fold(c);
+    for(auto &c: stmt.elses)
+      fold(c);
+  }
+  , [](StmtClass &stmt) {
+    fold(stmt.base);
+    for(auto &c: stmt.body)
+      fold(c);
+  }
   );
 }
 
