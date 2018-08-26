@@ -214,7 +214,7 @@ struct Parser::Impl {
   Stmt get_stmt_ahead_expr() {
     vector<Pat> pats;
     auto expr = *this->get_expr_list_maybe_tuple(); // Checked
-    while(this->try_eat_symbol(Symbol::Eq)) {
+    while(this->try_eat_symbol(Symbol::Assign)) {
       pats.push_back(expr_to_pat(move(expr)));
       auto c = this->get_expr_list_maybe_tuple();
       if(!c)
@@ -338,7 +338,7 @@ struct Parser::Impl {
       match(*this->is.get() // Checked
       , [&](TokName &&tok) {
         optional<Expr> default_;
-        if(this->try_eat_symbol(Symbol::Eq)) {
+        if(this->try_eat_symbol(Symbol::Assign)) {
           default_ = this->get_expr();
           has_default = true;
         } else if(has_default) // Previous param has default, but this not.
@@ -449,11 +449,60 @@ struct Parser::Impl {
 
   Expr get_expr_logic3() {
     if(!is_keyword(this->is.peek(), Keyword::Not))
-      return this->get_expr_val();
+      return this->get_expr_relation();
     this->is.get();
 
     return ExprUnary { UnaryOp::LogNot, this->get_expr_logic3() }; // Recur
   }
+
+  Expr get_expr_relation() {
+    vector<Expr> exprs;
+    vector<RelationOp> ops;
+    exprs.push_back(this->get_expr_val());
+
+    while(auto op = this->try_trans_relation_op()) {
+      exprs.push_back(this->get_expr_val());
+      ops.push_back(*op);
+    }
+
+    if(exprs.size() == 1)
+      return move(exprs.front());
+    return ExprRelation { move(exprs), move(ops) };
+  }
+
+  optional<RelationOp> try_trans_relation_op() {
+    auto tok = this->is.peek();
+    if(!tok)
+      return {};
+    optional<RelationOp> op;
+    match(*tok
+    , [&](const TokSymbol &tok) {
+      switch(tok.symbol) {
+        case Symbol::Lt: op = RelationOp::Lt; break;
+        case Symbol::Gt: op = RelationOp::Gt; break;
+        case Symbol::Le: op = RelationOp::Le; break;
+        case Symbol::Ge: op = RelationOp::Ge; break;
+        case Symbol::Eq: op = RelationOp::Eq; break;
+        case Symbol::Ne: op = RelationOp::Ne; break;
+        default: ;
+      }
+      if(op)
+        this->is.get();
+    }
+    , [&](const TokKeyword &tok) {
+      if(tok.keyword == Keyword::Is) {
+        op = RelationOp::Is;
+        this->is.get();
+        if(this->try_eat_keyword(Keyword::Not))
+          op = RelationOp::Ns;
+      }
+    }
+    , [&](const auto &) {}
+    );
+    return op;
+  }
+
+
 
   Expr get_expr_val() {
     Expr ret = this->get_expr_term();

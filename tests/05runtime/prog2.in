@@ -17,23 +17,23 @@ def __builtin__index(obj, idx):
 def __builtin__getattr(obj, name, default=None):
   _def = __intrinsic__obj_new3(None, None, {})
   v = __intrinsic__getattr3(obj, name, _def)
-  if __intrinsic__not1(__intrinsic__is2(v, _def)): # Direct attr
+  if __intrinsic__not1(v is _def): # Direct attr
     return v
 
   base = __intrinsic__obj_get_base1(obj)
-  if __intrinsic__not1(__intrinsic__is2(base, None)): # Not `object`
+  if __intrinsic__not1(base is None): # Not `object`
     v = __intrinsic__v_call2(__builtin__getattr, (base, name, _def))
-    if __intrinsic__not1(__intrinsic__is2(v, _def)):
+    if __intrinsic__not1(v is _def):
       return v
 
   # `function` already processed here
 
   ty = __intrinsic__obj_get_type1(obj)
-  if __intrinsic__not1(__intrinsic__is2(ty, None)): # Not `type`
+  if __intrinsic__not1(ty is None): # Not `type`
     v = __intrinsic__v_call2(__builtin__getattr, (ty, name, _def))
-    if not __intrinsic__is2(v, _def):
+    if v is not _def:
       ty = __intrinsic__obj_get_type1(v)
-      if __intrinsic__is2(ty, function): # Bounded function
+      if ty is function: # Bounded function
         def binded(*args):
           args = __intrinsic__tuple_concat2((obj,), args)
           return __intrinsic__v_call2(v, args)

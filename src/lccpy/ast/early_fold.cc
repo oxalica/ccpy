@@ -232,6 +232,10 @@ static void fold(Expr &expr) {
         move(*expr.else_expr)
       );
   }
+  , [&](ExprRelation &expr) {
+    for(auto &e: expr.exprs)
+      fold(e);
+  }
   );
   if(new_expr)
     expr = move(*new_expr);

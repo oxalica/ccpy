@@ -31,6 +31,14 @@ DECL_REFL_ENUM(UnaryOp, UNARY_OP_LIST)
 
 DECL_REFL_ENUM(BinaryOp, BINARY_OP_LIST)
 
+#define RELATION_OP_LIST(F) \
+  F(Lt, "lt") F(Gt, "gt") \
+  F(Le, "le") F(Ge, "ge") \
+  F(Eq, "eq") F(Ne, "ne") \
+  F(Is, "is") F(Ns, "isnot")
+
+DECL_REFL_ENUM(RelationOp, RELATION_OP_LIST)
+
 #define EXPR_LIST(F) \
   F(ExprName, { Str name; }) \
   F(ExprLiteral, { Literal lit; }) \
@@ -42,6 +50,7 @@ DECL_REFL_ENUM(BinaryOp, BINARY_OP_LIST)
   F(ExprUnary, { UnaryOp op; owned<Expr> expr; }) \
   F(ExprBinary, { BinaryOp op; owned<Expr> lexpr, rexpr; }) \
   F(ExprCond, { owned<Expr> cond, then_expr, else_expr; }) \
+  F(ExprRelation, { std::vector<Expr> exprs; std::vector<RelationOp> ops; }) \
 
 DECL_TAGGED_UNION(Expr, EXPR_LIST)
 

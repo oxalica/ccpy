@@ -1,0 +1,41 @@
+Start(Local size = 6):
+0: %0 = True
+1: %1 = 1
+2: %2 = 2
+3: %3 = __intrinsic__get_global0()
+4: %4 = "__builtin__lt"
+5: %5 = None
+6: %3 = __intrinsic__dict_get3(%3, %4, %5)
+7: %1 = __intrinsic__tuple_make_(%1, %2)
+8: %1 = __intrinsic__v_call2(%3, %1)
+9: %0 = %1
+10: JmpIfFalse %0 <28>
+11: %1 = 3
+12: %3 = __intrinsic__get_global0()
+13: %4 = "__builtin__gt"
+14: %5 = None
+15: %3 = __intrinsic__dict_get3(%3, %4, %5)
+16: %2 = __intrinsic__tuple_make_(%2, %1)
+17: %2 = __intrinsic__v_call2(%3, %2)
+18: %0 = %2
+19: JmpIfFalse %0 <28>
+20: %2 = 4
+21: %3 = __intrinsic__get_global0()
+22: %4 = "__builtin__eq"
+23: %5 = None
+24: %3 = __intrinsic__dict_get3(%3, %4, %5)
+25: %1 = __intrinsic__tuple_make_(%1, %2)
+26: %1 = __intrinsic__v_call2(%3, %1)
+27: %0 = %1
+28: %0 = True
+29: %1 = 1
+30: %2 = 2
+31: %1 = __intrinsic__is2(%1, %2)
+32: %0 = %1
+33: JmpIfFalse %0 <38>
+34: %1 = 3
+35: %2 = __intrinsic__is2(%2, %1)
+36: %2 = __intrinsic__not1(%2)
+37: %0 = %2
+
+

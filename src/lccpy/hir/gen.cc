@@ -222,6 +222,13 @@ struct Impl {
     return ret;
   }
 
+  void set_jmp_pos(size_t idx, size_t target) {
+    match(this->closure().hirs[idx]
+    , [&](HIRJF &hir) { hir.target = target; }
+    , [&](auto &) { throw HIRGenException { "JF locate failed" }; }
+    );
+  }
+
   template<typename T, typename F>
   Local eval_cond(Local &&cond, T f_true, F f_false) {
     auto ret = this->new_local();
@@ -244,14 +251,8 @@ struct Impl {
     f_false();
     auto end_pos = this->cur_pos();
 
-    match(this->closure().hirs[begin_jmp]
-    , [&](HIRJF &hir) { hir.target = mid_jmp + 1; }
-    , [&](auto &) { throw HIRGenException { "Impossible: JF1 locate fail" }; }
-    );
-    match(this->closure().hirs[mid_jmp]
-    , [&](HIRJF &hir) { hir.target = end_pos; }
-    , [&](auto &) { throw HIRGenException { "Impossible: JF2 locate fail" }; }
-    );
+    this->set_jmp_pos(begin_jmp, mid_jmp + 1);
+    this->set_jmp_pos(mid_jmp, end_pos);
   }
 
   void run_stmts(const vector<Stmt> &stmts) {
@@ -707,6 +708,44 @@ struct Impl {
       [&]() { return this->eval(*expr.else_expr); }, // falsy
       [&]() { return this->eval(*expr.then_expr); } // truth
     );
+  }
+
+  Local eval(const ExprRelation &expr) {
+    auto ret = this->eval(ImmBool { true });
+    vector<size_t> jmps;
+
+    auto last = this->eval(expr.exprs[0]);
+    size_t idx = 0;
+    for(auto op: expr.ops) {
+      auto nxt = this->eval(expr.exprs[++idx]);
+      this->store(
+        ret,
+        this->eval_relation(op, move(last), Local { nxt.id })
+      );
+      last = move(nxt);
+      if(idx < expr.exprs.size() - 1) {
+        jmps.push_back(this->cur_pos());
+        *this << HIRJF { ret, 0 }; // Placeholder
+      }
+    }
+
+    auto end_pos = this->cur_pos();
+    for(auto idx: jmps)
+      this->set_jmp_pos(idx, end_pos);
+
+    return ret;
+  }
+
+  Local eval_relation(RelationOp op, Local &&l, Local &&r) {
+    auto lr = SEQ2(move(l), move(r));
+    if(op == RelationOp::Is)
+      return this->eval_intrinsic_call(Intrinsic::is2, move(lr));
+    if(op == RelationOp::Ns)
+      return this->eval_intrinsic_call(Intrinsic::not1, SEQ1(
+        this->eval_intrinsic_call(Intrinsic::is2, move(lr))
+      ));
+    auto op_str = RelationOpMap[static_cast<size_t>(op)];
+    return this->eval_builtin_call(op_str, move(lr));
   }
 
   Local eval_not(Local &&x) {

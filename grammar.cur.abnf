@@ -41,7 +41,10 @@ expr = expr_cond
 expr_cond = expr_logic1 *("if" expr_logic1 "else") expr_logic1
 expr_logic1 = expr_logic2 *("or" expr_logic2)
 expr_logic2 = expr_logic3 *("and" expr_logic3)
-expr_logic3 = *"not" expr_val
+expr_logic3 = *"not" expr_relation
+expr_relation = expr_val *(relation_op expr_val)
+relation_op = "<" / ">" / ">=" / "<=" / "==" / "!="
+            / "is" ["not"]
 expr_val = expr_term *(("+" / "-") expr_term)
 expr_term = expr_factor *(("*" / "/" / "%") expr_factor)
 expr_factor = ("+" / "-" / "~") expr_atom

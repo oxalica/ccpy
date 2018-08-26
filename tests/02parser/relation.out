@@ -1,0 +1,5 @@
+StmtExpr(ExprRelation[ExprBinary("add", ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(1))), "eq", ExprLiteral(LitInteger(2))])
+StmtExpr(ExprRelation[ExprLiteral(LitInteger(1)), "lt", ExprLiteral(LitInteger(2)), "lt", ExprLiteral(LitInteger(3))])
+StmtExpr(ExprBinary("and", ExprRelation[ExprLiteral(LitInteger(1)), "lt", ExprLiteral(LitInteger(2))], ExprUnary("not", ExprRelation[ExprLiteral(LitInteger(3)), "gt", ExprLiteral(LitInteger(4)), "eq", ExprLiteral(LitInteger(5)), "ne", ExprLiteral(LitInteger(6)), "le", ExprLiteral(LitInteger(7)), "ge", ExprLiteral(LitInteger(8))])))
+StmtExpr(ExprRelation[ExprLiteral(LitInteger(1)), "is", ExprLiteral(LitInteger(2)), "lt", ExprLiteral(LitInteger(3))])
+End

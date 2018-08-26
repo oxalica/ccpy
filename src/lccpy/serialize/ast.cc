@@ -67,6 +67,10 @@ static Structual trans(BinaryOp op) {
   return StructStr { BinaryOpMap[static_cast<size_t>(op)] };
 }
 
+static Structual trans(RelationOp op) {
+  return StructStr { RelationOpMap[static_cast<size_t>(op)] };
+}
+
 static Structual trans(const Str &s) {
   return StructStr { s };
 }
@@ -120,6 +124,15 @@ static Structual trans(const Expr &expr) {
       trans(*expr.then_expr),
       trans(*expr.else_expr),
     } };
+  }, [](const ExprRelation &expr) {
+    vector<Structual> v;
+    size_t idx = 0;
+    for(auto &e: expr.exprs) {
+      v.push_back(trans(e));
+      if(idx < expr.ops.size())
+        v.push_back(trans(expr.ops[idx++]));
+    }
+    return StructBracket { "ExprRelation", move(v) };
   }
   );
 }

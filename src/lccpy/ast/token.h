@@ -21,7 +21,7 @@ struct Span {
   F(Not, "not") F(And, "and") F(Or, "or") \
   F(While, "while") F(For, "for") \
   F(Break, "break") F(Continue, "continue") \
-  F(In, "in") \
+  F(Is, "is") F(In, "in") \
   F(True, "True") F(False, "False") F(None, "None") \
   F(Class, "class") \
 
@@ -33,9 +33,11 @@ DECL_REFL_ENUM(Keyword, KEYWORD_LIST)
   F(LParen, "(") F(RParen, ")") \
   F(LBracket, "[") F(RBracket, "]") \
   F(LBrace, "{") F(RBrace, "}") \
-  F(Eq, "=") \
+  F(Assign, "=") \
   F(Inv, "~") \
-  F(Add, "+") F(Sub, "-") F(Mul, "*") F(Div, "/") F(Mod, "%")
+  F(Add, "+") F(Sub, "-") F(Mul, "*") F(Div, "/") F(Mod, "%") \
+  F(Lt, "<") F(Gt, ">") F(Le, "<=") F(Ge, ">=") \
+  F(Eq, "==") F(Ne, "!=") \
 
 DECL_REFL_ENUM(Symbol, SYMBOL_LIST)
 
