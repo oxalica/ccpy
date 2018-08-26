@@ -10,3 +10,5 @@ if then else elif and or not
 if a: b
 elif c: d
 else: e
+
+class

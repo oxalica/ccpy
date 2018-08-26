@@ -31,7 +31,9 @@ using Dict = std::unordered_map<Str, ObjectRef>;
     std::shared_ptr<ObjectPool> captured; \
     ObjectRef defaults; \
   }) \
-  F(ObjObject, {}) \
+  F(ObjObject, { \
+    optional<ObjectRef> base, type; \
+  }) \
   F(ObjNull, {}) \
 
 DECL_TAGGED_UNION(PrimitiveObj, PRIMITIVE_OBJ_LIST)

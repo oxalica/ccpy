@@ -50,4 +50,6 @@ Keyword("else")
 Symbol(":")
 Name("e")
 Newline
+Keyword("class")
+Newline
 End

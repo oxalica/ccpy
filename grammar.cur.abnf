@@ -19,7 +19,7 @@ del_stmt = "del" pat
 pass_stmt = "pass"
 flow_stmt = "return" [expr_list]
 
-compound_stmt = funcdef
+compound_stmt = funcdef / classdef
 funcdef = "def" NAME "(" [argdeflist] ")" ":" suite
 suite = simple_stmt / NEWLINE INDENT *stmt DEDENT
 argdeflist = *(arg_normal ",") *(arg_default ",") (arg_default / arg_rest) [","]
@@ -27,6 +27,7 @@ argdeflist = *(arg_normal ",") *(arg_default ",") (arg_default / arg_rest) [","]
 arg_normal = NAME
 arg_default = NAME "=" expr
 arg_rest = "*" NAME
+classdef = "class" NAME "(" NAME ")" ":" suite
 
 ; Assignable expression
 pat_list = pat *("," pat) [","]

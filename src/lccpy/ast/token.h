@@ -23,6 +23,7 @@ struct Span {
   F(Break, "break") F(Continue, "continue") \
   F(In, "in") \
   F(True, "True") F(False, "False") F(None, "None") \
+  F(Class, "class") \
 
 DECL_REFL_ENUM(Keyword, KEYWORD_LIST)
 

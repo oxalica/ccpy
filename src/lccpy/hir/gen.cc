@@ -122,6 +122,19 @@ struct Impl {
     return captured;
   }
 
+  Local get_locals() {
+    auto dict = this->eval_intrinsic_call(Intrinsic::dict_new0, SEQ0());
+    auto kvs = this->scope().get_locals();
+    for(auto &kv: kvs) {
+      this->eval_intrinsic_call(Intrinsic::dict_set3, SEQ3(
+        Local { dict.id },
+        this->eval(ImmStr { kv.first }),
+        Local { LocalIdx(kv.second) }
+      ));
+    }
+    return dict;
+  }
+
   Local new_local() {
     return Local { this->scope() };
   }
@@ -366,6 +379,42 @@ struct Impl {
     this->pat_del(stmt.pat);
   }
 
+  void run(const StmtClass &stmt) {
+    auto base = this->eval(stmt.base);
+
+    size_t closure_id = this->push_scope();
+    for(auto &s: stmt.body)
+      this->local_preresolve(s);
+
+    this->run_stmts(stmt.body);
+    *this << HIRReturn { this->get_locals() };
+
+    auto name_captured = this->pop_scope();
+    auto idx_captured = this->capture_vars(name_captured);
+    auto fn = this->new_local();
+    *this << HIRClosure {
+      fn,
+      closure_id,
+      move(idx_captured),
+      {},
+    };
+
+    auto type = this->eval_intrinsic_call(Intrinsic::dict_get3, SEQ3(
+      this->eval_intrinsic_call(Intrinsic::get_global0, SEQ0()),
+      this->eval(ImmStr { "type" }),
+      this->eval(ImmNone {})
+    ));
+    auto cls = this->eval_intrinsic_call(Intrinsic::obj_new3, SEQ3(
+      move(base),
+      move(type),
+      this->eval_intrinsic_call(Intrinsic::v_call2, SEQ2(
+        move(fn),
+        this->eval_tuple(SEQ0())
+      ))
+    ));
+    this->name_store(stmt.name, move(cls));
+  }
+
   void run(const StmtDef &stmt) {
     size_t closure_id = this->push_scope();
     this->local_preresolve(stmt);
@@ -382,15 +431,8 @@ struct Impl {
         defaults.push_back(this->eval(*arg.default_));
     auto tup_defaults = this->eval_tuple(move(defaults));
 
-    vector<Local> local_captured; // Get captured
-    vector<LocalIdx> idx_captured;
-    for(auto &name: name_captured) {
-      auto var = this->eval_name(name);
-      idx_captured.push_back(var);
-      local_captured.push_back(move(var)); // Keep when collecting
-    }
+    auto idx_captured = this->capture_vars(name_captured);
 
-    local_captured.clear(); // Now release
     *this << HIRClosure {
       tup_defaults, // Reuse
       closure_id,
@@ -399,6 +441,17 @@ struct Impl {
     };
 
     this->pat_store(PatName { stmt.name }, move(tup_defaults));
+  }
+
+  vector<LocalIdx> capture_vars(const vector<Str> &name_captured) {
+    vector<Local> local_captured;
+    vector<LocalIdx> idx_captured;
+    for(auto &name: name_captured) {
+      auto var = this->eval_name(name);
+      idx_captured.push_back(var);
+      local_captured.push_back(move(var)); // Keep when collecting
+    }
+    return idx_captured;
   }
 
   void run(const StmtIf &stmt) {
