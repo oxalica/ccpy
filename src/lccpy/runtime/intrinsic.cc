@@ -26,6 +26,20 @@ T &expect(CObj x, const char *reason) {
   );
 }
 
+Obj get_global_name(CObj global, const Str &name) {
+  return match<Obj>(global->primitive
+  , [&](ObjDict &global) {
+    auto it = global.value.find(name);
+    if(it == global.value.end())
+      throw IntrinsicException { "Undefined primitive type" };
+    return it->second;
+  }
+  , [&](auto &) -> Obj {
+    throw IntrinsicException { "Impossible: wrong global type" };
+  }
+  );
+}
+
 } // namespace anonymous
 
 #define TO_STR(X) #X
@@ -46,8 +60,8 @@ IntrinsicMod::IntrinsicMod(std::istream &_in, std::ostream &_out)
   , global(new_obj(ObjDict { {} }))
   , true_(new_obj(ObjBool { true }))
   , false_(new_obj(ObjBool { false }))
-  , none(new_obj(ObjObject {}))
-  , ellipse(new_obj(ObjObject {}))
+  , none(new_obj(ObjObject { {}, {} }))
+  , ellipse(new_obj(ObjObject { {}, {} }))
   {}
 
 #define SIG(NAME) ObjectRef IntrinsicMod::NAME(const ObjectRef &_args)
@@ -107,8 +121,56 @@ SIG(setattr3) { ARGS(setattr3, 3)
 
 SIG(delattr2) { ARGS(delattr2, 2)
   auto &name = expect<ObjStr>(args[1], "Wrong name type for delattr3").value;
-  args[0]->attrs.erase(name);
-  return this->none;
+  return args[0]->attrs.erase(name) == 1 ? this->true_ : this->false_;
+}
+
+SIG(obj_new2) { ARGS(obj_new2, 2)
+  optional<Obj> base, type;
+  if(args[0].get() != this->none.get())
+    base = args[0];
+  if(args[1].get() != this->none.get())
+    type = args[1];
+  return new_obj(ObjObject { base, type });
+}
+
+SIG(obj_get_type1) { ARGS(obj_get_type1, 1)
+  string prim_name;
+  optional<ObjectRef> type_obj {};
+
+  match(args[0]->primitive
+  , [&](const ObjBool &) { prim_name = "bool"; }
+  , [&](const ObjInt &) { prim_name = "int"; }
+  , [&](const ObjStr &) { prim_name = "str"; }
+  , [&](const ObjTuple &) { prim_name = "tuple"; }
+  , [&](const ObjDict &) { prim_name = "dict"; }
+  , [&](const ObjClosure &) { prim_name = "function"; }
+  , [&](const ObjObject &obj) {
+    if(obj.type)
+      type_obj = *obj.type;
+    else
+      prim_name = "type";
+  }
+  , [&](const ObjNull &) {
+    throw IntrinsicException { "Get type of ObjNull" };
+  }
+  );
+
+  if(type_obj)
+    return *type_obj;
+  return get_global_name(this->global, prim_name);
+}
+
+SIG(obj_get_base1) { ARGS(obj_get_base1, 1)
+  return match<Obj>(args[0]->primitive
+  , [&](const ObjObject &obj) {
+    if(obj.base)
+      return *obj.base;
+    return get_global_name(this->global, "object");
+  }
+  , [&](const auto &) {
+    return get_global_name(this->global, "type");
+  }
+  );
 }
 
 SIG(tuple_make_) {

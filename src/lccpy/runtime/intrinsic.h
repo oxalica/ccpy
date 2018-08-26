@@ -21,6 +21,9 @@ namespace ccpy::runtime {
   F(3, getattr) \
   F(3, setattr) \
   F(2, delattr) \
+  F(2, obj_new) \
+  F(1, obj_get_base) \
+  F(1, obj_get_type) \
   F(_, tuple_make) \
   F(1, tuple_len) \
   F(2, tuple_idx) \
