@@ -404,16 +404,13 @@ struct Impl {
       this->eval(ImmStr { "type" }),
       this->eval(ImmNone {})
     ));
-    auto cls = this->eval_intrinsic_call(Intrinsic::obj_new2, SEQ2(
+    auto cls = this->eval_intrinsic_call(Intrinsic::obj_new3, SEQ3(
       move(base),
-      move(type)
-    ));
-    this->eval_intrinsic_call(Intrinsic::dict_update2, SEQ2(
-      Local { cls.id },
+      move(type),
       this->eval_intrinsic_call(Intrinsic::v_call2, SEQ2(
         move(fn),
         this->eval_tuple(SEQ0())
-      ));
+      ))
     ));
     this->name_store(stmt.name, move(cls));
   }

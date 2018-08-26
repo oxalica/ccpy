@@ -1,0 +1,120 @@
+def __builtin__global_get(name):
+  g = __intrinsic__get_global0()
+  return __intrinsic__dict_get3(g, name, None)
+
+def __builtin__not(x):
+  return __intrinsic__not1(x)
+
+def __builtin__call(f, args):
+  ty = __intrinsic__obj_get_type1(f)
+  g = __intrinsic__v_call2(__builtin__getattr, (ty, '__call__', None))
+  args = __intrinsic__tuple_concat2((f,), args)
+  return __intrinsic__v_call2(g, args)
+
+def __builtin__index(obj, idx):
+  return __intrinsic__tuple_idx2(obj, idx)
+
+def __builtin__getattr(obj, name, default=None):
+  _def = __intrinsic__obj_new3(None, None, {})
+  v = __intrinsic__getattr3(obj, name, _def)
+  if __intrinsic__not1(__intrinsic__is2(v, _def)): # Direct attr
+    return v
+
+  base = __intrinsic__obj_get_base1(obj)
+  if __intrinsic__not1(__intrinsic__is2(base, None)): # Not `object`
+    v = __intrinsic__v_call2(__builtin__getattr, (base, name, _def))
+    if __intrinsic__not1(__intrinsic__is2(v, _def)):
+      return v
+
+  # `function` already processed here
+
+  ty = __intrinsic__obj_get_type1(obj)
+  if __intrinsic__not1(__intrinsic__is2(ty, None)): # Not `type`
+    v = __intrinsic__v_call2(__builtin__getattr, (ty, name, _def))
+    if not __intrinsic__is2(v, _def):
+      ty = __intrinsic__obj_get_type1(v)
+      if __intrinsic__is2(ty, function): # Bounded function
+        def binded(*args):
+          args = __intrinsic__tuple_concat2((obj,), args)
+          return __intrinsic__v_call2(v, args)
+        return binded
+      else:
+        return v
+  return default
+
+def __builtin__setattr(obj, name, value):
+  __intrinsic__setattr3(obj, name, value)
+
+def type_ctor(cls):
+  println('type.__call__')
+  obj = cls.__new__(cls)
+  cls.__init__(obj)
+  return obj
+
+type = __intrinsic__obj_new3(None, None, { '__call__': type_ctor })
+
+def obj_new(cls):
+  println('object.__new__')
+  return __intrinsic__obj_new3(None, cls, {})
+
+def obj_init(self):
+  println('object.__init__')
+
+object = __intrinsic__obj_new3(None, type, { '__new__': obj_new, '__init__': obj_init })
+
+class function(object):
+  def __call__(self, *args):
+    return __intrinsic__v_call2(self, args)
+
+class int(object): pass
+
+
+def println(s=''):
+  __intrinsic__print1(__intrinsic__str_concat2(s, '\n'))
+
+def print(*xs):
+  println(__intrinsic__repr1(xs))
+
+print.__call__ = 1      # Make no sense
+print('Hello, world!')
+
+o = object()
+o.a = print
+o.a('No bounded')
+println()
+
+class A(object):
+  def __new__(cls):
+    println('A.__new__')
+    o = object.__new__(cls)
+    o.a = 2
+    return o
+
+  def f(self):
+    return self.a
+
+  g = 10
+
+a = A()
+print(a.f(), A.f(a), a.g, A.g)
+a.a = 233
+print(a.f(), A.f(a), a.g, A.g)
+println()
+
+class B(A):
+  def __new__(cls):
+    println('B.__new__')
+    return A.__new__(cls)
+
+  def __init__(self):
+    A.__init__(self)
+    println('B.__init__')
+    self.a = 114514
+
+  def f(self):
+    return 'B', self.a
+
+  g = f
+
+b = B()
+print(b.f(), b.g()) # `g` will be also passed `self` as the first arg

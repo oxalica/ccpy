@@ -21,7 +21,7 @@ namespace ccpy::runtime {
   F(3, getattr) \
   F(3, setattr) \
   F(2, delattr) \
-  F(2, obj_new) \
+  F(3, obj_new) \
   F(1, obj_get_base) \
   F(1, obj_get_type) \
   F(_, tuple_make) \
@@ -46,7 +46,6 @@ namespace ccpy::runtime {
   F(3, dict_get) \
   F(3, dict_set) \
   F(2, dict_del) \
-  F(2, dict_update) \
   F(1, dict_to_tuple) \
   F(1, print) \
   F(0, flush) \

@@ -68,7 +68,7 @@ IntrinsicMod::IntrinsicMod(std::istream &_in, std::ostream &_out)
 #define ARGS(NAME, N) \
   auto &args = expect<ObjTuple>(_args, "Invalid args for " #NAME).elems; \
   if(args.size() != N) \
-    throw IntrinsicException { "Invalid args length for" #NAME };
+    throw IntrinsicException { "Invalid args length for " #NAME };
 
 SIG(v_call2) { ARGS(v_call2, 2)
   throw IntrinsicException { "Call to virtual intrinsic v_call2" };
@@ -124,17 +124,20 @@ SIG(delattr2) { ARGS(delattr2, 2)
   return args[0]->attrs.erase(name) == 1 ? this->true_ : this->false_;
 }
 
-SIG(obj_new2) { ARGS(obj_new2, 2)
+SIG(obj_new3) { ARGS(obj_new3, 3)
   optional<Obj> base, type;
   if(args[0].get() != this->none.get())
     base = args[0];
   if(args[1].get() != this->none.get())
     type = args[1];
-  return new_obj(ObjObject { base, type });
+  auto &dict = expect<ObjDict>(args[2], "Wrong dict type for obj_new3").value;
+  auto prim = new_obj(ObjObject { base, type });
+  prim->attrs = dict;
+  return prim;
 }
 
 SIG(obj_get_type1) { ARGS(obj_get_type1, 1)
-  string prim_name;
+  optional<string> prim_name {};
   optional<ObjectRef> type_obj {};
 
   match(args[0]->primitive
@@ -144,12 +147,7 @@ SIG(obj_get_type1) { ARGS(obj_get_type1, 1)
   , [&](const ObjTuple &) { prim_name = "tuple"; }
   , [&](const ObjDict &) { prim_name = "dict"; }
   , [&](const ObjClosure &) { prim_name = "function"; }
-  , [&](const ObjObject &obj) {
-    if(obj.type)
-      type_obj = *obj.type;
-    else
-      prim_name = "type";
-  }
+  , [&](const ObjObject &obj) { if(obj.type) type_obj = *obj.type; }
   , [&](const ObjNull &) {
     throw IntrinsicException { "Get type of ObjNull" };
   }
@@ -157,7 +155,9 @@ SIG(obj_get_type1) { ARGS(obj_get_type1, 1)
 
   if(type_obj)
     return *type_obj;
-  return get_global_name(this->global, prim_name);
+  if(prim_name)
+    return get_global_name(this->global, *prim_name);
+  return this->none;
 }
 
 SIG(obj_get_base1) { ARGS(obj_get_base1, 1)
@@ -165,7 +165,7 @@ SIG(obj_get_base1) { ARGS(obj_get_base1, 1)
   , [&](const ObjObject &obj) {
     if(obj.base)
       return *obj.base;
-    return get_global_name(this->global, "object");
+    return this->none;
   }
   , [&](const auto &) {
     return get_global_name(this->global, "type");
@@ -376,16 +376,6 @@ SIG(dict_del2) { ARGS(dict_del2, 3)
   auto &dict = expect<ObjDict>(args[0], "Wrong dict type for dict_del2").value;
   auto &key = expect<ObjStr>(args[1], "Wrong key type for dict_del2").value;
   dict.erase(key);
-  return this->none;
-}
-
-SIG(dict_update2) { ARGS(dict_update2, 2)
-  auto &dict1 =
-    expect<ObjDict>(args[0], "Wrong first type for dict_update2").value;
-  auto &dict2 =
-    expect<ObjDict>(args[1], "Wrong second type for dict_update2").value;
-  for(auto &kv: dict2)
-    dict1.insert(kv);
   return this->none;
 }
 
