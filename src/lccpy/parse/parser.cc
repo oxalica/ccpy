@@ -32,6 +32,7 @@ bool is_expr_begin(OptTokRef tok) {
       case Symbol::DotDotDot: // `...`
       case Symbol::Inv: case Symbol::Add: case Symbol::Sub: // Unary op
       case Symbol::LParen: // Group or tuple
+      case Symbol::LBrace: // Dict literal
         return true;
       default:
         return false;
@@ -549,13 +550,21 @@ struct Parser::Impl {
       switch(tok.symbol) {
         case Symbol::DotDotDot:
           return ExprLiteral { LitEllipse {} };
-        case Symbol::LParen: {
+
+        case Symbol::LParen: { // Group of tuple literal
           auto ret = this->get_expr_list();
           this->expect_symbol("Expecting `)`", Symbol::RParen);
           return ret.first.size() == 1 && !ret.second
             ? move(ret.first.front())
             : ExprTuple { move(ret.first) };
         }
+
+        case Symbol::LBrace: { // Dict literal
+          auto ret = this->get_dict_kvs();
+          this->expect_symbol("Expecting `}`", Symbol::RBrace);
+          return ExprDict { move(ret) };
+        }
+
         default:
           throw StreamFailException { "Unexpected symbol for atom" };
       }
@@ -573,6 +582,19 @@ struct Parser::Impl {
       throw StreamFailException { "Unexpected token for atom" };
     }
     );
+  }
+
+  vector<pair<Expr, Expr>> get_dict_kvs() {
+    vector<pair<Expr, Expr>> kvs;
+    while(is_expr_begin(this->is.peek())) {
+      auto k = this->get_expr();
+      this->expect_symbol("Expect `:` between key and value", Symbol::Colon);
+      auto v = this->get_expr();
+      kvs.emplace_back(move(k), move(v));
+      if(!this->try_eat_symbol(Symbol::Comma))
+        break;
+    }
+    return kvs;
   }
 };
 

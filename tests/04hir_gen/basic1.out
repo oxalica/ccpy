@@ -215,5 +215,27 @@ Start(Local size = 8):
 213: %1 = False
 214: JmpIfFalse %1 <216>
 215: %2 = 2
+216: %0 = __intrinsic__dict_new0()
+217: %0 = __intrinsic__dict_new0()
+218: %1 = 1
+219: %2 = 2
+220: %3 = __intrinsic__get_global0()
+221: %4 = "__builtin__add"
+222: %5 = None
+223: %3 = __intrinsic__dict_get3(%3, %4, %5)
+224: %1 = __intrinsic__tuple_make_(%1, %2)
+225: %1 = __intrinsic__v_call2(%3, %1)
+226: %2 = 3
+227: %3 = 4
+228: %4 = __intrinsic__get_global0()
+229: %5 = "__builtin__add"
+230: %6 = None
+231: %4 = __intrinsic__dict_get3(%4, %5, %6)
+232: %2 = __intrinsic__tuple_make_(%2, %3)
+233: %2 = __intrinsic__v_call2(%4, %2)
+234: %1 = __intrinsic__dict_set3(%0, %1, %2)
+235: %1 = 5
+236: %2 = "6"
+237: %1 = __intrinsic__dict_set3(%0, %1, %2)
 
 

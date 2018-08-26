@@ -26,6 +26,13 @@ static Structual trans_opt(const optional<T> &x) {
   return StructValue { "None" };
 }
 
+static auto trans_kvs(const vector<pair<Expr, Expr>> &kvs) {
+  vector<Structual> ret {};
+  for(auto &kv: kvs)
+    ret.push_back(StructParen { {}, { trans(kv.first), trans(kv.second) } });
+  return ret;
+}
+
 static Structual trans(const Literal &lit) {
   return match<Structual>(lit
   , [](const LitInteger &lit) {
@@ -84,14 +91,17 @@ static Structual trans(const Expr &expr) {
       StructBracket { {}, trans_all(expr.args) },
     } };
   }
-  , [] (const ExprIndex &expr) {
+  , [](const ExprIndex &expr) {
     return StructParen { "ExprIndex", {
       trans(*expr.obj),
       trans(*expr.idx),
     } };
   }
-  , [] (const ExprTuple &expr) {
+  , [](const ExprTuple &expr) {
     return StructParen { "ExprTuple", trans_all(expr.elems) };
+  }
+  , [](const ExprDict &expr) {
+    return StructBrace { "ExprDict", trans_kvs(expr.kvs) };
   }
   , [](const ExprUnary &expr) {
     return StructParen { "ExprUnary", {

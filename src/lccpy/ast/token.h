@@ -31,6 +31,7 @@ DECL_REFL_ENUM(Keyword, KEYWORD_LIST)
   F(Dot, ".") F(DotDotDot, "...") \
   F(LParen, "(") F(RParen, ")") \
   F(LBracket, "[") F(RBracket, "]") \
+  F(LBrace, "{") F(RBrace, "}") \
   F(Eq, "=") \
   F(Inv, "~") \
   F(Add, "+") F(Sub, "-") F(Mul, "*") F(Div, "/") F(Mod, "%")

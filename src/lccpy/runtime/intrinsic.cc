@@ -292,6 +292,10 @@ SIG(str_concat2) { ARGS(str_concat2, 2)
   return new_obj(ObjStr { a + b });
 }
 
+SIG(dict_new0) { ARGS(dict_new0, 0)
+  return new_obj(ObjDict { {} });
+}
+
 SIG(dict_get3) { ARGS(dict_get3, 3)
   auto &dict = expect<ObjDict>(args[0], "Wrong dict type for dict_get3").value;
   auto &key = expect<ObjStr>(args[1], "Wrong key type for dict_get3").value;

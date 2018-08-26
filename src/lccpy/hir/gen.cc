@@ -607,6 +607,17 @@ struct Impl {
     return this->eval_tuple(move(elems));
   }
 
+  Local eval(const ExprDict &expr) {
+    auto ret = this->eval_intrinsic_call(Intrinsic::dict_new0, SEQ0());
+    for(auto &kv: expr.kvs)
+      this->eval_intrinsic_call(Intrinsic::dict_set3, SEQ3(
+        Local { ret.id },
+        this->eval(kv.first),
+        this->eval(kv.second)
+      ));
+    return ret;
+  }
+
   Local eval(const ExprUnary &expr) {
     Str op_str { UnaryOpMap[static_cast<size_t>(expr.op)] };
     return this->eval_builtin_call(move(op_str), SEQ1(

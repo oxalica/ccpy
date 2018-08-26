@@ -39,6 +39,7 @@ namespace ccpy::runtime {
   F(1, str_to_ord) \
   F(1, str_to_int) \
   F(2, str_concat) \
+  F(0, dict_new) \
   F(3, dict_get) \
   F(3, dict_set) \
   F(2, dict_del) \

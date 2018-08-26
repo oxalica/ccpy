@@ -169,6 +169,12 @@ static void fold(Expr &expr) {
   , [](ExprCall &expr) { fold(*expr.func); fold(expr.args); }
   , [](ExprIndex &expr) { fold(*expr.obj); fold(*expr.idx); }
   , [](ExprTuple &expr) { fold(expr.elems); }
+  , [](ExprDict &expr) {
+    for(auto &kv: expr.kvs) {
+      fold(kv.first);
+      fold(kv.second);
+    }
+  }
   , [&](ExprUnary &expr) {
     fold(*expr.expr);
 

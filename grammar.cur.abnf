@@ -46,8 +46,10 @@ expr_term = expr_factor *(("*" / "/" / "%") expr_factor)
 expr_factor = ("+" / "-" / "~") expr_atom
 expr_atom = atom *trailer
 atom = "(" [expr_list] ")"
+     / "{" [expr_kvs] "}"
      / NAME / NUMBER / STRING *STRING
      / "..." / "None" / "True" / "False"
 trailer = "(" expr_list ")"
         / "[" expr_list "]"
         / "." NAME
+expr_kvs = expr ":" expr ["," [expr_kvs]]

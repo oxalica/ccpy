@@ -1,6 +1,7 @@
 #ifndef __CCPY_AST_EXPR__
 #define __CCPY_AST_EXPR__
 
+#include <utility>
 #include <vector>
 #include "../util/adt.h"
 #include "../util/macro.h"
@@ -37,6 +38,7 @@ DECL_REFL_ENUM(BinaryOp, BINARY_OP_LIST)
   F(ExprCall, { owned<Expr> func; std::vector<Expr> args; }) \
   F(ExprIndex, { owned<Expr> obj; owned<Expr> idx; }) \
   F(ExprTuple, { std::vector<Expr> elems; }) \
+  F(ExprDict, { std::vector<std::pair<Expr, Expr>> kvs; }) \
   F(ExprUnary, { UnaryOp op; owned<Expr> expr; }) \
   F(ExprBinary, { BinaryOp op; owned<Expr> lexpr, rexpr; }) \
   F(ExprCond, { owned<Expr> cond, then_expr, else_expr; }) \
