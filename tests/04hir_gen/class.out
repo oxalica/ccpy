@@ -1,0 +1,95 @@
+Start(Local size = 5):
+0: %0 = "object"
+1: %1 = __intrinsic__get_global0()
+2: %2 = "__builtin__global_get"
+3: %3 = None
+4: %1 = __intrinsic__dict_get3(%1, %2, %3)
+5: %0 = __intrinsic__tuple_make_(%0)
+6: %0 = __intrinsic__v_call2(%1, %0)
+7: %1 = Closure #1() defaults = %0
+8: %2 = __intrinsic__get_global0()
+9: %3 = "type"
+10: %4 = None
+11: %2 = __intrinsic__dict_get3(%2, %3, %4)
+12: %3 = __intrinsic__tuple_make_()
+13: %1 = __intrinsic__v_call2(%1, %3)
+14: %0 = __intrinsic__obj_new3(%0, %2, %1)
+15: %1 = __intrinsic__get_global0()
+16: %2 = "A"
+17: %0 = __intrinsic__dict_set3(%1, %2, %0)
+18: %0 = "A"
+19: %1 = __intrinsic__get_global0()
+20: %2 = "__builtin__global_get"
+21: %3 = None
+22: %1 = __intrinsic__dict_get3(%1, %2, %3)
+23: %0 = __intrinsic__tuple_make_(%0)
+24: %0 = __intrinsic__v_call2(%1, %0)
+25: %1 = Closure #2() defaults = %0
+26: %2 = __intrinsic__get_global0()
+27: %3 = "type"
+28: %4 = None
+29: %2 = __intrinsic__dict_get3(%2, %3, %4)
+30: %3 = __intrinsic__tuple_make_()
+31: %1 = __intrinsic__v_call2(%1, %3)
+32: %0 = __intrinsic__obj_new3(%0, %2, %1)
+33: %1 = __intrinsic__get_global0()
+34: %2 = "B"
+35: %0 = __intrinsic__dict_set3(%1, %2, %0)
+
+
+Closure #1(Local size = 1):
+0: %0 = __intrinsic__dict_new0()
+1: Return %0
+
+
+Closure #2(Local size = 4):
+0: %2 = __intrinsic__tuple_make_()
+1: %2 = Closure #3() defaults = %2
+2: %0 = %2
+3: %2 = __intrinsic__tuple_make_()
+4: %2 = Closure #4() defaults = %2
+5: %1 = %2
+6: %2 = __intrinsic__dict_new0()
+7: %3 = "f"
+8: %3 = __intrinsic__dict_set3(%2, %3, %1)
+9: %3 = "__init__"
+10: %3 = __intrinsic__dict_set3(%2, %3, %0)
+11: Return %2
+
+
+Closure #3(Local size = 6):
+0: %1 = __intrinsic__v_args0()
+1: %2 = __intrinsic__tuple_len1(%1)
+2: %3 = 0
+3: %3 = __intrinsic__tuple_idx2(%1, %3)
+4: %0 = %3
+5: %1 = 1
+6: %2 = "a"
+7: %3 = __intrinsic__get_global0()
+8: %4 = "__builtin__setattr"
+9: %5 = None
+10: %3 = __intrinsic__dict_get3(%3, %4, %5)
+11: %2 = __intrinsic__tuple_make_(%0, %2, %1)
+12: %2 = __intrinsic__v_call2(%3, %2)
+13: %1 = None
+14: Return %1
+
+
+Closure #4(Local size = 5):
+0: %1 = __intrinsic__v_args0()
+1: %2 = __intrinsic__tuple_len1(%1)
+2: %3 = 0
+3: %3 = __intrinsic__tuple_idx2(%1, %3)
+4: %0 = %3
+5: %1 = "a"
+6: %2 = __intrinsic__get_global0()
+7: %3 = "__builtin__getattr"
+8: %4 = None
+9: %2 = __intrinsic__dict_get3(%2, %3, %4)
+10: %1 = __intrinsic__tuple_make_(%0, %1)
+11: %1 = __intrinsic__v_call2(%2, %1)
+12: Return %1
+13: %1 = None
+14: Return %1
+
+

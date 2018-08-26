@@ -278,9 +278,23 @@ struct Parser::Impl {
         this->is.get();
         return this->get_stmt_after_if(); // Already eat newline
 
+      case Keyword::Class:
+        this->is.get();
+        return this->get_stmt_after_class(); // Already eat newline
+
       default:
         throw StreamFailException { "Unexpected keyword for stmt" };
     }
+  }
+
+  Stmt get_stmt_after_class() {
+    auto name = this->expect_name("Expect class name");
+    this->expect_symbol("Expect `(` after class name", Symbol::LParen);
+    auto base = this->get_expr();
+    this->expect_symbol("Expect `)` after class base", Symbol::RParen);
+    this->expect_symbol("Expect `:` after class signature", Symbol::Colon);
+    auto body = this->get_stmt_or_suite();
+    return StmtClass { move(name), move(base), move(body) };
   }
 
   Stmt get_stmt_after_if() {

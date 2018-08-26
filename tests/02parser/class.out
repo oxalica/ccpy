@@ -1,0 +1,3 @@
+StmtClass { "A", ExprName("object"), [StmtPass] }
+StmtClass { "B", ExprName("object"), [StmtDef("__init__", [("self", None)], None, [StmtPass]), StmtDef("f", [("self", None)], None, [StmtPass])] }
+End
