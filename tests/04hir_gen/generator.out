@@ -1,0 +1,17 @@
+Start(Local size = 3):
+0: %0 = __intrinsic__tuple_make_()
+1: %0 = Closure #1() defaults = %0
+2: %1 = __intrinsic__get_global0()
+3: %2 = "f"
+4: %0 = __intrinsic__dict_set3(%1, %2, %0)
+
+
+Closure #1 Generator (Local size = 1):
+0: %0 = 1
+1: Yield %0
+2: %0 = 2
+3: Return %0
+4: %0 = None
+5: Return %0
+
+

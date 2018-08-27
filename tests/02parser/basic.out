@@ -41,4 +41,6 @@ StmtExpr(ExprDict { (ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2))) })
 StmtExpr(ExprDict { (ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2))) })
 StmtExpr(ExprDict { (ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2))), (ExprBinary("add", ExprLiteral(LitInteger(3)), ExprLiteral(LitInteger(4))), ExprBinary("add", ExprLiteral(LitInteger(5)), ExprLiteral(LitInteger(6)))) })
 StmtExpr(ExprDict { (ExprLiteral(LitInteger(0)), ExprLiteral(LitStr("0"))), (ExprLiteral(LitInteger(1)), ExprLiteral(LitStr("1"))), (ExprLiteral(LitInteger(2)), ExprLiteral(LitStr("2"))) })
+StmtYield(Some(ExprTuple(ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2)))))
+StmtYield(None)
 End

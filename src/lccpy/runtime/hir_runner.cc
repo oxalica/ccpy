@@ -18,27 +18,8 @@ ObjectRef new_obj(PrimitiveObj &&o) {
 } // namespace anonymous
 
 struct HIRRunner::Impl {
-  struct Context {
-    size_t closure_id;
-    size_t ip;
-
-    shared_ptr<ObjectPool> locals, captured;
-    ObjectRef args, defaults;
-  };
-
-  struct FrameInfo {
-    bool is_except;
-    LocalIdx dest;
-  };
-
-  struct Frame {
-    FrameInfo info;
-    Context context;
-  };
-
   const Module &mod;
-  vector<Frame> frames;
-  Context context;
+  vector<shared_ptr<vector<Frame>>> frames_stack;
   IntrinsicMod intrinsic;
 
   Impl(const Module &_mod, std::istream &in, std::ostream &out)
@@ -48,15 +29,23 @@ struct HIRRunner::Impl {
       throw HIRRuntimeException { "Module should have an entry" };
   }
 
+  vector<Frame> &frames() {
+    return *this->frames_stack.back();
+  }
+
+  Frame &context() {
+    return this->frames().back();
+  }
+
   const ObjectPlace local(LocalIdx id) {
     if(id >= 0) {
-      auto &locals = *this->context.locals;
+      auto &locals = *this->context().locals;
       if(size_t(id) >= locals.size())
         throw HIRRuntimeException { "Local access out of range" };
       return locals[id];
     } else {
       id = ~id;
-      auto &captured = *this->context.captured;
+      auto &captured = *this->context().captured;
       if(size_t(id) >= captured.size())
         throw HIRRuntimeException { "Captured access out of range" };
       return captured[id];
@@ -64,7 +53,7 @@ struct HIRRunner::Impl {
   }
 
   const HIR &hir(size_t ip) {
-    auto &hirs = this->mod.closures[this->context.closure_id].hirs; // Checked
+    auto &hirs = this->mod.closures[this->context().closure_id].hirs; // Checked
     if(ip >= hirs.size())
       throw HIRRuntimeException { "Invalid ip ptr" };
     return hirs[ip];
@@ -78,12 +67,12 @@ struct HIRRunner::Impl {
   }
 
   void push_except_frame(LocalIdx dest, size_t target) {
-    this->frames.push_back(Frame {
-      FrameInfo { true, dest },
-      this->context,
-    });
-    this->frames.back().context.ip = target - 1;
-    // `this->context` is not changed
+    auto frame = this->context(); // Copy
+    frame.ip = target - 1;
+    frame.is_except = true;
+    frame.dest = dest;
+    this->frames().insert(this->frames().end() - 1, move(frame));
+    // `context` is not changed
   }
 
   void push_return_frame(
@@ -94,51 +83,67 @@ struct HIRRunner::Impl {
     ObjectRef &&args,
     const ObjectRef &defaults
   ) {
-    this->frames.push_back(Frame {
-      FrameInfo { false, dest },
-      move(this->context),
-    });
-    this->context = Context {
+    this->context().dest = dest;
+    this->context().is_except = false;
+    this->frames().push_back(Frame {
       closure_id,
       size_t(-1), // `ip` will be increased after this instruction
-
       this->make_obj_pool(local_size),
-      captured,
+      move(captured),
       move(args),
       defaults,
-    };
+
+      false, 0, // Unused
+    });
   }
 
-  optional<FrameInfo> pop_frame() {
-    if(this->frames.empty())
-      return {};
-    auto &frame = this->frames.back();
-    auto ret = frame.info;
-    this->context = move(frame.context);
-    this->frames.pop_back();
-    return ret;
+  optional<Frame &> pop_frame() {
+    auto &frames = this->frames();
+    if(frames.empty())
+      throw HIRRuntimeException { "Impossible: pop frame when empty" };
+    frames.pop_back();
+    if(!frames.empty())
+      return frames.back();
+    if(this->frames_stack.empty())
+      throw HIRRuntimeException { "Impossible: backtrace gen frame when empty" };
+    this->frames_stack.pop_back();
+    return this->context();
+  }
+
+  void new_frames() {
+    this->frames_stack.push_back(make_shared<vector<Frame>>());
+  }
+
+  auto pop_gen_frames() {
+    if(this->frames_stack.empty())
+      throw HIRRuntimeException { "Impossible: pop gen frame when empty" };
+    auto frames = move(this->frames_stack.back());
+    this->frames_stack.pop_back();
+    return frames;
   }
 
   void run() {
-    this->context = Context {
+    this->new_frames();
+    this->frames().push_back(Frame {
       0, // `closure_id` checked in constructor
       0, // `ip` at beginning
-
       this->make_obj_pool(this->mod.closures[0].local_size),
       this->make_obj_pool(0),
       new_obj(ObjTuple { {} }),
       new_obj(ObjTuple { {} }),
-    };
-    for(; !this->is_ended(); ++this->context.ip)
-      match(this->hir(this->context.ip), [&](const auto &hir) {
+
+      false, 0, // Unused
+    });
+    for(; !this->is_ended(); ++this->context().ip)
+      match(this->hir(this->context().ip), [&](const auto &hir) {
         this->exec(hir);
       });
   }
 
   bool is_ended() {
-    return this->frames.empty() && // Root level
-      this->context.closure_id == 0 && // Running root
-      this->mod.closures[0].hirs.size() == this->context.ip; // At the end
+    auto &context = this->context();
+    return context.closure_id == 0 && // Running root
+      this->mod.closures[0].hirs.size() == context.ip; // At the end
   }
 
   void exec(const HIRMov &hir) {
@@ -174,40 +179,48 @@ struct HIRRunner::Impl {
   void exec(const HIRIntrinsicCall &hir) {
     switch(static_cast<Intrinsic>(hir.intrinsic_id)) {
       case Intrinsic::v_args0:
-        *this->local(hir.dest) = this->context.args;
+        *this->local(hir.dest) = this->context().args;
         break;
 
       case Intrinsic::v_defaults0:
-        *this->local(hir.dest) = this->context.defaults;
+        *this->local(hir.dest) = this->context().defaults;
         break;
 
       case Intrinsic::v_call2: {
         if(hir.args.size() != 2)
           throw HIRRuntimeException { "v_call2 should have 2 args" };
 
-        auto fn = *this->local(hir.args[0]);
-        auto args = *this->local(hir.args[1]);
-        auto fn_ = match<const ObjClosure &>(fn->primitive
-        , [&](const ObjClosure &fn) -> const ObjClosure & { return fn; }
-        , [](const auto &) -> const ObjClosure & {
+        auto &fn = match<ObjClosure &>((*this->local(hir.args[0]))->primitive
+        , [&](ObjClosure &fn) -> ObjClosure & { return fn; }
+        , [](auto &) -> ObjClosure & {
           throw HIRRuntimeException { "v_call_ `fn` requires a closure" };
         }
         );
+        auto args = *this->local(hir.args[1]);
         match(args->primitive
         , [](const ObjTuple &) {}
         , [](const auto &) {
           throw HIRRuntimeException { "v_call_ `args` requires a tuple" };
         }
         );
+        this->exec_call(hir.dest, fn, args);
+        break;
+      }
 
-        this->push_return_frame(
-          hir.dest,
-          fn_.closure_id,
-          this->mod.closures[fn_.closure_id].local_size, // Checked
-          fn_.captured,
-          move(args),
-          fn_.defaults
+      case Intrinsic::v_gen_next1: {
+        if(hir.args.size() != 1)
+          throw HIRRuntimeException { "v_gen_next1 should have 1 args" };
+        auto &gen = match<ObjGenerator &>((*this->local(hir.args[0]))->primitive
+        , [&](ObjGenerator &fn) -> ObjGenerator & { return fn; }
+        , [&](auto &) -> ObjGenerator & {
+          throw HIRRuntimeException { "v_gen_next1 `gen` requires a generator" };
+        }
         );
+        if(gen.frames->empty())
+          throw HIRRuntimeException { "v_gen_next1 on a stopped generator" };
+        this->context().is_except = false;
+        this->context().dest = hir.dest;
+        this->frames_stack.push_back(gen.frames);
         break;
       }
 
@@ -226,16 +239,44 @@ struct HIRRunner::Impl {
     }
   }
 
+  void exec_call(size_t dest, ObjClosure &fn, ObjectRef args) {
+    auto &closure = this->mod.closures[fn.closure_id]; // Checked
+    if(!closure.is_generator) {
+      this->push_return_frame(
+        dest,
+        fn.closure_id,
+        closure.local_size,
+        fn.captured,
+        move(args),
+        fn.defaults
+      );
+    } else {
+      this->new_frames();
+      this->frames().push_back(Frame {
+        fn.closure_id,
+        size_t(-1), // Will be increased next time running it
+        this->make_obj_pool(closure.local_size),
+        fn.captured,
+        move(args),
+        fn.defaults,
+
+        false, 0, // Unused
+      });
+      auto frames = this->pop_gen_frames();
+      *this->local(dest) = new_obj(ObjGenerator { move(frames) });
+    }
+  }
+
   void exec(const HIRJF &hir) {
     if(this->local(hir.cond)->get() == this->intrinsic.false_.get())
-      this->context.ip = hir.target - 1;
+      this->context().ip = hir.target - 1;
   }
 
   void exec(const HIRReturn &hir) {
     auto value = *this->local(hir.value);
-    while(auto info = this->pop_frame())
-      if(!info->is_except) { // Is `return` frame
-        *this->local(info->dest) = value;
+    while(auto context = this->pop_frame())
+      if(!context->is_except) { // Is `return` frame
+        *this->local(context->dest) = value;
         return;
       }
     throw HIRRuntimeException { "Return outside function" };
@@ -243,12 +284,18 @@ struct HIRRunner::Impl {
 
   void exec(const HIRRaise &hir) {
     auto value = *this->local(hir.value);
-    while(auto info = this->pop_frame())
-      if(info->is_except) { // Is `except` frame
-        *this->local(info->dest) = value;
+    while(auto context = this->pop_frame())
+      if(context->is_except) { // Is `except` frame
+        *this->local(context->dest) = value;
         return;
       }
     throw HIRRuntimeException { "Unhandled exception" };
+  }
+
+  void exec(const HIRYield &hir) {
+    auto value = *this->local(hir.value);
+    this->pop_gen_frames();
+    *this->local(this->context().dest) = value;
   }
 
   void exec(const HIRPushExcept &hir) {

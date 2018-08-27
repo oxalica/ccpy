@@ -106,7 +106,7 @@ struct Impl {
   size_t push_scope(bool global = false) {
     auto closure_id = this->mod.closures.size();
     this->mod_stack.push_back(this->mod.closures.size());
-    this->mod.closures.push_back(Closure { 0, {} });
+    this->mod.closures.push_back(Closure { 0, {}, false });
     auto new_ns = global
       ? make_shared<NameScope>() // Global
       : make_shared<NameScope>(this->scope_stack.back());
@@ -374,6 +374,14 @@ struct Impl {
 
   void run(const StmtRaise &stmt) {
     *this << HIRRaise { this->eval(stmt.value) };
+  }
+
+  void run(const StmtYield &stmt) {
+    this->closure().is_generator = true;
+    auto value = stmt.value
+      ? this->eval(*stmt.value)
+      : this->eval(ImmNone {});
+    *this << HIRYield { move(value) };
   }
 
   void run(const StmtDel &stmt) {
@@ -764,6 +772,8 @@ Module HIRGen::operator()(const vector<Stmt> &stmts) const {
     auto captured = t.pop_scope();
     if(!captured.empty())
       throw HIRGenException { "Impossible: Global captures" };
+    if(t.mod.closures[0].is_generator)
+      throw HIRGenException { "Cannot `yield` in global space" };
     return move(t.mod);
   } catch(NameResolveException e) {
     throw HIRGenException { e.what() }; // Trans & rethrow

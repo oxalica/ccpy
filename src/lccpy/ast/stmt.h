@@ -29,6 +29,7 @@ struct FuncArg {
   F(StmtAssign, { std::vector<Pat> pats; Expr expr; }) \
   F(StmtReturn, { optional<Expr> value; }) \
   F(StmtRaise, { Expr value; }) \
+  F(StmtYield, { optional<Expr> value; }) \
   F(StmtDel, { Pat pat; }) \
   F(StmtDef, { \
     Str name; \

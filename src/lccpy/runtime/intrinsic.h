@@ -13,6 +13,8 @@ namespace ccpy::runtime {
   F(0, v_args) \
   F(0, v_defaults) \
   F(1, v_del) \
+  F(1, v_gen_next) \
+  F(1, gen_stopped) \
   F(0, get_global) \
   F(2, is) \
   F(1, id) \

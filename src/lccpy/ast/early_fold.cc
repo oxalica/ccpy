@@ -49,6 +49,10 @@ static void fold(Stmt &stmt) {
   , [](StmtRaise &stmt) {
     fold(stmt.value);
   }
+  , [](StmtYield &stmt) {
+    if(stmt.value)
+      fold(*stmt.value);
+  }
   , [](StmtDel &) {}
   , [](StmtDef &stmt) {
     for(auto &s: stmt.body)

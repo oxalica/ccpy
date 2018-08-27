@@ -66,6 +66,9 @@ Str trans(const HIR &hir) {
   , [](const HIRRaise &hir) {
     return "Raise %" + trans(hir.value);
   }
+  , [](const HIRYield &hir) {
+    return "Yield %" + trans(hir.value);
+  }
   , [](const HIRPushExcept &hir) {
     return "PushExcept %" + trans(hir.dest)
       + " <" + trans(hir.target) + ">";
@@ -102,6 +105,8 @@ Str HIRSerializer::operator()(const Module &mod) const {
       ret += "Start";
     else
       ret += "Closure #" + trans(i);
+    if(c.is_generator)
+      ret += " Generator ";
     ret += "(Local size = " + trans(c.local_size) + "):\n";
     ret += (*this)(c);
     ret += "\n\n";

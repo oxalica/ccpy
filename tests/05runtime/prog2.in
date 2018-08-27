@@ -118,3 +118,22 @@ class B(A):
 
 b = B()
 print(b.f(), b.g()) # `g` will be also passed `self` as the first arg
+println()
+
+def g(a=233):
+  println('Run')
+  if not __intrinsic__int_eq2(a, 233):
+    yield 'No'
+  return a
+
+a = g()
+b = g(1)
+c = g(2)
+println('Now generate')
+print(__intrinsic__v_gen_next1(a))
+print(__intrinsic__v_gen_next1(b))
+print(__intrinsic__v_gen_next1(c))
+print(__intrinsic__v_gen_next1(b))
+print(__intrinsic__gen_stopped1(a))
+print(__intrinsic__gen_stopped1(b))
+print(__intrinsic__gen_stopped1(c))

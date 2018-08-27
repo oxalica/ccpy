@@ -271,6 +271,13 @@ struct Parser::Impl {
         return StmtReturn { move(c) };
       }
 
+      case Keyword::Yield: {
+        this->is.get();
+        auto c = this->get_expr_list_maybe_tuple();
+        this->expect_newline();
+        return StmtYield { move(c) };
+      }
+
       case Keyword::Def:
         return this->get_stmt_ahead_def(); // Already eat newline
 

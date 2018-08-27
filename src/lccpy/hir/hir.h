@@ -37,6 +37,7 @@ using LocalIdx = std::ptrdiff_t;
   F(HIRJF, { LocalIdx cond; std::size_t target; }) /* Jump if False */ \
   F(HIRReturn, { LocalIdx value; }) \
   F(HIRRaise, { LocalIdx value; }) \
+  F(HIRYield, { LocalIdx value; }) \
   F(HIRPushExcept, { LocalIdx dest; std::size_t target; }) \
   F(HIRPopExcept, {}) \
 
@@ -45,6 +46,7 @@ DECL_TAGGED_UNION(HIR, HIR_LIST)
 struct Closure {
   std::size_t local_size;
   std::vector<HIR> hirs;
+  bool is_generator;
 };
 
 struct Module {

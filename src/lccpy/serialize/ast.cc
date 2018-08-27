@@ -167,6 +167,9 @@ static Structual trans(const Stmt &stmt) {
   , [](const StmtRaise &stmt) {
     return StructParen { "StmtRaise", { trans(stmt.value) } };
   }
+  , [](const StmtYield &stmt) {
+    return StructParen { "StmtYield", { trans_opt(stmt.value) } };
+  }
   , [](const StmtDel &stmt) {
     return StructParen { "StmtDel", { trans(stmt.pat) } };
   }

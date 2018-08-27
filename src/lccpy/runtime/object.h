@@ -4,6 +4,7 @@
 #include <memory>
 #include <unordered_map>
 #include <vector>
+#include "../hir/hir.h"
 #include "../util/adt.h"
 #include "../util/macro.h"
 #include "../util/types.h"
@@ -20,6 +21,15 @@ using ObjectPool = std::vector<ObjectPlace>;
 
 using Dict = std::unordered_map<Str, ObjectRef>;
 
+struct Frame {
+  std::size_t closure_id, ip;
+  std::shared_ptr<ObjectPool> locals, captured;
+  ObjectRef args, defaults;
+
+  bool is_except;
+  hir::LocalIdx dest;
+};
+
 #define PRIMITIVE_OBJ_LIST(F) \
   F(ObjBool, { bool value; }) \
   F(ObjInt, { Integer value; }) \
@@ -30,6 +40,9 @@ using Dict = std::unordered_map<Str, ObjectRef>;
     std::size_t closure_id; \
     std::shared_ptr<ObjectPool> captured; \
     ObjectRef defaults; \
+  }) \
+  F(ObjGenerator, { \
+    std::shared_ptr<std::vector<Frame>> frames; \
   }) \
   F(ObjObject, { \
     optional<ObjectRef> base, type; \

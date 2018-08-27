@@ -51,6 +51,11 @@ struct Impl {
         " captured " + ser(obj.captured->size()) +
         " @" + ser(Integer(ptr)) + ">";
     }
+    , [&](const ObjGenerator &obj) {
+      auto ser = IntegerSerializer {};
+      return "<Generator with " + ser(obj.frames->size()) + " frames" +
+        " @" + ser(Integer(ptr)) + ">";
+    }
     , [&](const ObjObject &) {
       return "<Object @" + IntegerSerializer {}(Integer(ptr)) + ">";
     }

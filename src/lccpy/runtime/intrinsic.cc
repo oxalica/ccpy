@@ -86,6 +86,16 @@ SIG(v_del1) { ARGS(v_del1, 1)
   throw IntrinsicException { "Call to virtual intrinsic v_del1" };
 }
 
+SIG(v_gen_next1) { ARGS(v_gen_next1, 1)
+  throw IntrinsicException { "Call to virtual intrinsic v_gen_next1" };
+}
+
+SIG(gen_stopped1) { ARGS(gen_stopped1, 1)
+  auto &frames =
+    expect<ObjGenerator>(args[0], "Wrong name type for gen_stopped1").frames;
+  return frames->empty() ? this->true_ : this->false_;
+}
+
 SIG(get_global0) { ARGS(get_global0, 0)
   return this->global;
 }
@@ -147,6 +157,7 @@ SIG(obj_get_type1) { ARGS(obj_get_type1, 1)
   , [&](const ObjTuple &) { prim_name = "tuple"; }
   , [&](const ObjDict &) { prim_name = "dict"; }
   , [&](const ObjClosure &) { prim_name = "function"; }
+  , [&](const ObjGenerator &) { prim_name = "generator"; }
   , [&](const ObjObject &obj) { if(obj.type) type_obj = *obj.type; }
   , [&](const ObjNull &) {
     throw IntrinsicException { "Get type of ObjNull" };
