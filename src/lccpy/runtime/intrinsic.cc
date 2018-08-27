@@ -150,19 +150,27 @@ SIG(obj_get_type1) { ARGS(obj_get_type1, 1)
   optional<string> prim_name {};
   optional<ObjectRef> type_obj {};
 
-  match(args[0]->primitive
-  , [&](const ObjBool &) { prim_name = "bool"; }
-  , [&](const ObjInt &) { prim_name = "int"; }
-  , [&](const ObjStr &) { prim_name = "str"; }
-  , [&](const ObjTuple &) { prim_name = "tuple"; }
-  , [&](const ObjDict &) { prim_name = "dict"; }
-  , [&](const ObjClosure &) { prim_name = "function"; }
-  , [&](const ObjGenerator &) { prim_name = "generator"; }
-  , [&](const ObjObject &obj) { if(obj.type) type_obj = *obj.type; }
-  , [&](const ObjNull &) {
-    throw IntrinsicException { "Get type of ObjNull" };
-  }
-  );
+  if(args[0].get() == this->none.get())
+    prim_name = "NoneType";
+  else if(args[0].get() == this->true_.get() ||
+      args[0].get() == this->false_.get())
+    prim_name = "bool";
+  else if(args[0].get() == this->ellipse.get())
+    prim_name = "ellipse";
+  else
+    match(args[0]->primitive
+    , [&](const ObjBool &) { prim_name = "bool"; }
+    , [&](const ObjInt &) { prim_name = "int"; }
+    , [&](const ObjStr &) { prim_name = "str"; }
+    , [&](const ObjTuple &) { prim_name = "tuple"; }
+    , [&](const ObjDict &) { prim_name = "dict"; }
+    , [&](const ObjClosure &) { prim_name = "function"; }
+    , [&](const ObjGenerator &) { prim_name = "generator"; }
+    , [&](const ObjObject &obj) { if(obj.type) type_obj = *obj.type; }
+    , [&](const ObjNull &) {
+      throw IntrinsicException { "Get type of ObjNull" };
+    }
+    );
 
   if(type_obj)
     return *type_obj;
@@ -172,6 +180,12 @@ SIG(obj_get_type1) { ARGS(obj_get_type1, 1)
 }
 
 SIG(obj_get_base1) { ARGS(obj_get_base1, 1)
+  if(args[0].get() == this->none.get() ||
+      args[0].get() == this->ellipse.get() ||
+      args[0].get() == this->true_.get() ||
+      args[0].get() == this->false_.get())
+    return this->none;
+
   return match<Obj>(args[0]->primitive
   , [&](const ObjObject &obj) {
     if(obj.base)
