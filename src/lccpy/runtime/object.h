@@ -22,7 +22,7 @@ using ObjectPool = std::vector<ObjectPlace>;
 using Dict = std::unordered_map<Str, ObjectRef>;
 
 struct Frame {
-  std::size_t closure_id, ip;
+  std::size_t mod_id, closure_id, ip;
   std::shared_ptr<ObjectPool> locals, captured;
   ObjectRef args, defaults;
 
@@ -37,7 +37,7 @@ struct Frame {
   F(ObjTuple, { ObjectTuple elems; }) \
   F(ObjDict, { Dict value; }) \
   F(ObjClosure, { \
-    std::size_t closure_id; \
+    std::size_t mod_id, closure_id; \
     std::shared_ptr<ObjectPool> captured; \
     ObjectRef defaults; \
   }) \

@@ -18,15 +18,32 @@ ObjectRef new_obj(PrimitiveObj &&o) {
 } // namespace anonymous
 
 struct HIRRunner::Impl {
-  const Module &mod;
+  vector<Module> mods;
   vector<shared_ptr<vector<Frame>>> frames_stack;
   IntrinsicMod intrinsic;
 
-  Impl(const Module &_mod, std::istream &in, std::ostream &out)
-    : mod(_mod)
-    , intrinsic({ in, out }) {
+  Impl(std::istream &in, std::ostream &out)
+    : mods({})
+    , intrinsic({ in, out }) {}
+
+  size_t load(Module &&mod) {
     if(mod.closures.empty())
       throw HIRRuntimeException { "Module should have an entry" };
+    this->mods.push_back(move(mod));
+    return this->mods.size() - 1;
+  }
+
+  const Module &mod(size_t mod_id) {
+    if(mod_id >= this->mods.size())
+      throw HIRRuntimeException { "Module id out of range" };
+    return this->mods[mod_id];
+  }
+
+  const Closure &closure(size_t mod_id, size_t closure_id) {
+    auto &closures = this->mod(mod_id).closures;
+    if(closure_id >= closures.size())
+      throw HIRRuntimeException { "Closure id out of range" };
+    return closures[closure_id];
   }
 
   vector<Frame> &frames() {
@@ -52,13 +69,6 @@ struct HIRRunner::Impl {
     }
   }
 
-  const HIR &hir(size_t ip) {
-    auto &hirs = this->mod.closures[this->context().closure_id].hirs; // Checked
-    if(ip >= hirs.size())
-      throw HIRRuntimeException { "Invalid ip ptr" };
-    return hirs[ip];
-  }
-
   auto make_obj_pool(size_t local_size) {
     ObjectPool new_locals { local_size };
     for(auto &c: new_locals)
@@ -77,6 +87,7 @@ struct HIRRunner::Impl {
 
   void push_return_frame(
     LocalIdx dest,
+    size_t mod_id,
     size_t closure_id,
     size_t local_size,
     shared_ptr<ObjectPool> captured,
@@ -86,6 +97,7 @@ struct HIRRunner::Impl {
     this->context().dest = dest;
     this->context().is_except = false;
     this->frames().push_back(Frame {
+      mod_id,
       closure_id,
       size_t(-1), // `ip` will be increased after this instruction
       this->make_obj_pool(local_size),
@@ -122,28 +134,36 @@ struct HIRRunner::Impl {
     return frames;
   }
 
-  void run() {
+  void run(size_t mod_id) {
+    if(mod_id >= this->mods.size())
+      throw HIRRuntimeException { "`mod_id` out of range" };
+
     this->new_frames();
     this->frames().push_back(Frame {
+      mod_id, // Checked
       0, // `closure_id` checked in constructor
-      0, // `ip` at beginning
-      this->make_obj_pool(this->mod.closures[0].local_size),
+      size_t(-1), // `ip` will be increased later
+      this->make_obj_pool(this->closure(mod_id, 0).local_size),
       this->make_obj_pool(0),
       new_obj(ObjTuple { {} }),
       new_obj(ObjTuple { {} }),
 
       false, 0, // Unused
     });
-    for(; !this->is_ended(); ++this->context().ip)
-      match(this->hir(this->context().ip), [&](const auto &hir) {
+    while(auto hir = this->next_hir())
+      match(*hir, [&](const auto &hir) {
         this->exec(hir);
       });
   }
 
-  bool is_ended() {
+  optional<const HIR &> next_hir() {
     auto &context = this->context();
-    return context.closure_id == 0 && // Running root
-      this->mod.closures[0].hirs.size() == context.ip; // At the end
+    auto &closure = this->closure(context.mod_id, context.closure_id);
+    if(++context.ip < closure.hirs.size())
+      return closure.hirs[context.ip];
+    if(context.closure_id == 0) // Module root
+      return {};
+    throw HIRRuntimeException { "Invalid ip" };
   }
 
   void exec(const HIRMov &hir) {
@@ -163,13 +183,12 @@ struct HIRRunner::Impl {
   }
 
   void exec(const HIRClosure &hir) {
-    if(hir.closure_id >= this->mod.closures.size())
-      throw HIRRuntimeException { "Closure id out of range" };
     vector<ObjectPlace> captured;
     for(LocalIdx id: hir.captured)
       captured.push_back(this->local(id));
     auto defaults = *this->local(hir.defaults);
     *this->local(hir.dest) = new_obj(ObjClosure {
+      this->context().mod_id,
       hir.closure_id,
       make_shared<ObjectPool>(move(captured)),
       defaults,
@@ -240,10 +259,11 @@ struct HIRRunner::Impl {
   }
 
   void exec_call(size_t dest, ObjClosure &fn, ObjectRef args) {
-    auto &closure = this->mod.closures[fn.closure_id]; // Checked
+    auto &closure = this->closure(fn.mod_id, fn.closure_id);
     if(!closure.is_generator) {
       this->push_return_frame(
         dest,
+        fn.mod_id,
         fn.closure_id,
         closure.local_size,
         fn.captured,
@@ -253,6 +273,7 @@ struct HIRRunner::Impl {
     } else {
       this->new_frames();
       this->frames().push_back(Frame {
+        fn.mod_id,
         fn.closure_id,
         size_t(-1), // Will be increased next time running it
         this->make_obj_pool(closure.local_size),
@@ -312,13 +333,17 @@ struct HIRRunner::Impl {
   }
 };
 
-HIRRunner::HIRRunner(const Module &mod, istream &in, ostream &out)
-  : pimpl(Impl { mod, in, out }) {}
+HIRRunner::HIRRunner(istream &in, ostream &out)
+  : pimpl(Impl { in, out }) {}
 
 HIRRunner::~HIRRunner() noexcept {}
 
-void HIRRunner::run() {
-  pimpl->run();
+size_t HIRRunner::load(Module &&mod) {
+  return pimpl->load(move(mod));
+}
+
+void HIRRunner::run(size_t mod_id) {
+  pimpl->run(mod_id);
 }
 
 } // namespace ccpy::runtime

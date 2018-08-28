@@ -42,8 +42,9 @@ int main() {
   }
 
   try {
-    HIRRunner runner { mod, cin, cout };
-    runner.run();
+    HIRRunner runner { cin, cout };
+    auto id = runner.load(move(mod));
+    runner.run(id);
   } catch(HIRRuntimeException e) {
     cout << "HIR runtime error: " << e.what() << "\n";
   } catch(IntrinsicException e) {

@@ -12,10 +12,11 @@ namespace ccpy::runtime {
 
 class HIRRunner {
 public:
-  HIRRunner(const hir::Module &, std::istream &, std::ostream &);
+  HIRRunner(std::istream &, std::ostream &);
   ~HIRRunner() noexcept;
 
-  void run();
+  size_t load(hir::Module &&);
+  void run(size_t mod_id);
 
 private:
   struct Impl;
