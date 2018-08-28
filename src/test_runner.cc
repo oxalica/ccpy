@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     ::BINARY_PATH.push_back('\\');
 #else
   if(::BINARY_PATH.empty() || ::BINARY_PATH.back() != '/')
-    ::BINARY_PATH.push_back('\\');
+    ::BINARY_PATH.push_back('/');
 #endif
 
   auto all_tests = load_tests();
