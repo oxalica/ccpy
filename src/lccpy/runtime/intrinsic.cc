@@ -331,11 +331,17 @@ SIG(str_len1) { ARGS(str_len1, 1)
   return new_obj(ObjInt { Integer(str.length()) });
 }
 
-SIG(str_find2) { ARGS(str_find2, 1)
-  auto &s1 = expect<ObjStr>(args[0], "Wrong first type for str_find2").value;
-  auto &s2 = expect<ObjStr>(args[1], "Wrong second type for str_find2").value;
-  auto pos = s1.find(s2);
-  return new_obj(ObjInt { Integer(pos == string::npos ? -1 : pos) });
+SIG(str_find4) { ARGS(str_find4, 4)
+  auto &s1 = expect<ObjStr>(args[0], "Wrong first type for str_find4").value;
+  auto &s2 = expect<ObjStr>(args[1], "Wrong second type for str_find4").value;
+  if(s1.length() < s2.length())
+    return new_obj(ObjInt { Integer(-1) });
+  auto &l = expect<ObjInt>(args[2], "Wrong l type for str_find4").value;
+  auto &r = expect<ObjInt>(args[3], "Wrong r type for str_find4").value;
+  auto len2 = Integer(s2.length());
+  auto _l = max(l, Integer { 0 }), _r = min(r, Integer(s1.length()) - len2);
+  auto pos = Integer(s1.find(s2, size_t(_l)));
+  return new_obj(ObjInt { Integer(pos <= _r ? pos : -1) });
 }
 
 SIG(str_slice4) { ARGS(str_slice4, 4)

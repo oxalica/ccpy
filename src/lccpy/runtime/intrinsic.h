@@ -41,7 +41,7 @@ namespace ccpy::runtime {
   F(2, int_eq) \
   F(1, int_to_str) \
   F(1, str_len) \
-  F(2, str_find) \
+  F(4, str_find) \
   F(4, str_slice) \
   F(1, str_to_ord) \
   F(1, str_to_int) \

@@ -272,7 +272,7 @@ def __builtin__ne(l, r):
   t = _op(l, r, '__ne__', '__ne__')
   if t is not NotImplemented:
     return t
-  return not eq2(l, r)
+  return not __builtin__eq(l, r)
 
 def _def_op(op, lop, rop=_default):
   if rop is _default:
@@ -387,21 +387,21 @@ class dict(object):
       yield k, v
 
 class list(object): # Implemented by tuple
-  def __new__(cls, iterable=_default):
-    ret = ()
+  def __init__(self, iterable=_default):
+    xs = ()
     if iterable is not _default:
       n = 0
       for c in iterable:
-        __intrinsic__tuple_splice4(ret, n, n, (c,))
+        __intrinsic__tuple_splice4(xs, n, n, (c,))
         n = n + 1
-    return ret
+    self.xs = xs
 
   def append(self, x):
-    n = len(self)
-    __intrinsic__tuple_splice4(self, n, n, (x,))
+    n = len(self.xs)
+    __intrinsic__tuple_splice4(self.xs, n, n, (x,))
 
   def clear(self):
-    __intrinsic__tuple_splice4(self, 0, len(self), ())
+    __intrinsic__tuple_splice4(self.xs, 0, len(self.xs), ())
 
   def copy(self):
     return list(self)
@@ -409,28 +409,25 @@ class list(object): # Implemented by tuple
   def pop(self):
     if not self:
       raise IndexError('`list.pop` on empty list')
-    n = len(self)
-    return __intrinsic__tuple_splice4(self, n - 1, n, ())[0]
+    n = len(self.xs)
+    return __intrinsic__tuple_splice4(self.xs, n - 1, n, ())[0]
 
   def __bool__(self):
-    return len(self) != 0
+    return len(self.xs) != 0
 
   def __len__(self):
-    return __intrinsic__tuple_len1(self)
+    return __intrinsic__tuple_len1(self.xs)
 
   def __repr__(self):
-    return '[' + ', '.join(self) + ']'
+    return '[' + ', '.join(self.xs) + ']'
 
   def __getitem__(self, idx):
-    if __intrinsic__int_lt2(idx, len(self)):
-      return __intrinsic__tuple_idx2(self, idx)
+    if __intrinsic__int_lt2(idx, len(self.xs)):
+      return __intrinsic__tuple_idx2(self.xs, idx)
     raise IndexError(idx)
 
-  def __eq__(self, other):
-    return len(self) == len(other) and all(zip(eq2, self, other))
-
   def __iter__(self):
-    return tuple.__iter__(self)
+    return tuple.__iter__(self.xs)
 
 class range(object):
   def __init__(self, a, b=_default, step=_default):
@@ -474,13 +471,15 @@ class str(object):
       start = 0
     if end is _default:
       end = len(self)
-    if not isinstance(self, str):
+    if not isinstance(sub, str):
       raise TypeError('`str.find` requires `sub` to be str')
     if not isinstance(start, int):
       raise TypeError('`str.find` requires `start` to be int')
     if not isinstance(end, int):
       raise TypeError('`str.find` requires `end` to be int')
-    return __intrinsic__str_find2(self, sub, start, end)
+    if start < 0:
+      start = start + len(self)
+    return __intrinsic__str_find4(self, sub, start, end)
 
   def __str__(self):
     return self
@@ -579,7 +578,7 @@ def getattr(obj, name, default=_default):
 
 def input(prompt=None):
   if prompt is not None:
-    print(prompt)
+    raw_print(prompt)
     flush()
   return __intrinsic__input0()
 
