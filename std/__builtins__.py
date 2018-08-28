@@ -388,13 +388,7 @@ class dict(object):
 
 class list(object): # Implemented by tuple
   def __init__(self, iterable=_default):
-    xs = ()
-    if iterable is not _default:
-      n = 0
-      for c in iterable:
-        __intrinsic__tuple_splice4(xs, n, n, (c,))
-        n = n + 1
-    self.xs = xs
+    self.xs = tuple(iterable)
 
   def append(self, x):
     n = len(self.xs)
@@ -419,7 +413,7 @@ class list(object): # Implemented by tuple
     return __intrinsic__tuple_len1(self.xs)
 
   def __repr__(self):
-    return '[' + ', '.join(self.xs) + ']'
+    return '[' + ', '.join(map(repr, self.xs)) + ']'
 
   def __getitem__(self, idx):
     if __intrinsic__int_lt2(idx, len(self.xs)):
@@ -575,6 +569,9 @@ def getattr(obj, name, default=_default):
   if default is not _default:
     return default
   raise AttributeError(name)
+
+def id(obj):
+  return __intrinsic__id1(obj)
 
 def input(prompt=None):
   if prompt is not None:
