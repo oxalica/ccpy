@@ -116,9 +116,9 @@ struct HIRRunner::Impl {
     frames.pop_back();
     if(!frames.empty())
       return frames.back();
-    if(this->frames_stack.empty())
-      throw HIRRuntimeException { "Impossible: backtrace gen frame when empty" };
     this->frames_stack.pop_back();
+    if(this->frames_stack.empty())
+      return {};
     return this->context();
   }
 

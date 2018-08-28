@@ -326,6 +326,18 @@ SIG(int_to_str1) { ARGS(int_to_str1, 1)
   return new_obj(ObjStr { move(s) });
 }
 
+SIG(str_len1) { ARGS(str_len1, 1)
+  auto &str = expect<ObjStr>(args[0], "Wrong string type for str_len1").value;
+  return new_obj(ObjInt { Integer(str.length()) });
+}
+
+SIG(str_find2) { ARGS(str_find2, 1)
+  auto &s1 = expect<ObjStr>(args[0], "Wrong first type for str_find2").value;
+  auto &s2 = expect<ObjStr>(args[1], "Wrong second type for str_find2").value;
+  auto pos = s1.find(s2);
+  return new_obj(ObjInt { Integer(pos == string::npos ? -1 : pos) });
+}
+
 SIG(str_slice4) { ARGS(str_slice4, 4)
   auto &str =
     expect<ObjStr>(args[0], "Wrong string type for str_slice4").value;
