@@ -490,6 +490,50 @@ struct Impl {
       );
   }
 
+  void run(const StmtWhile &stmt) {
+    auto beg_pos = this->cur_pos();
+    auto cond = this->eval(stmt.cond);
+    auto mid_pos = this->cur_pos();
+    *this << HIRJF { move(cond), 0 }; // Placeholder
+    this->run_stmts(stmt.stmts);
+    auto const_false = this->eval(ImmBool { false });
+    auto end_pos = this->cur_pos();
+    *this << HIRJF { move(const_false), beg_pos }; // Placeholder
+    this->set_jmp_pos(mid_pos, end_pos + 1);
+  }
+
+  void run(const StmtFor &stmt) {
+    auto it = this->eval_builtin_call("iter", SEQ1(
+      this->eval(stmt.iterable)
+    ));
+
+    auto beg_pos = this->cur_pos();
+    *this << HIRPushExcept { 0, 0 }; // Placeholder
+    auto val = this->eval_builtin_call("next", SEQ1(move(it)));
+    this->pat_store(stmt.pat, move(val));
+    this->run_stmts(stmt.stmts);
+    *this << HIRJF { this->eval(ImmBool { false }), beg_pos + 1 };
+
+    auto except_pos = this->cur_pos();
+    auto except_buf = this->new_local();
+    match(this->closure().hirs[beg_pos]
+    , [&](HIRPushExcept &hir) {
+      hir.dest = except_buf.id;
+      hir.target = except_pos;
+    }
+    , [&](auto &) { throw HIRGenException { "ForExcept locate fail" }; }
+    );
+
+    this->run_cond(
+      this->eval_builtin_call("isinstance", SEQ2(
+        Local { except_buf.id },
+        this->eval_name("StopIteration")
+      )),
+      []() {}, // Normal break
+      [&]() { *this << HIRRaise { except_buf }; } // Reraise
+    );
+  }
+
   void run(const StmtTry &stmt) {
     auto value_buf = this->new_local();
     auto beg_pos = this->cur_pos();

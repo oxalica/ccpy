@@ -65,6 +65,16 @@ static void fold(Stmt &stmt) {
     for(auto &c: stmt.elses)
       fold(c);
   }
+  , [](StmtWhile &stmt) {
+    fold(stmt.cond);
+    for(auto &c: stmt.stmts)
+      fold(c);
+  }
+  , [](StmtFor &stmt) {
+    fold(stmt.iterable);
+    for(auto &c: stmt.stmts)
+      fold(c);
+  }
   , [](StmtClass &stmt) {
     fold(stmt.base);
     for(auto &c: stmt.body)

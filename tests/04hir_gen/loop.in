@@ -1,0 +1,7 @@
+def f():
+  while True:
+    a
+
+def g():
+  for x in xs:
+    b

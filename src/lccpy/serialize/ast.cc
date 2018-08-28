@@ -188,6 +188,19 @@ static Structual trans(const Stmt &stmt) {
       trans(stmt.elses),
     } };
   }
+  , [](const StmtWhile &stmt) {
+    return StructBrace { "StmtWhile", {
+      trans(stmt.cond),
+      trans(stmt.stmts),
+    } };
+  }
+  , [](const StmtFor &stmt) {
+    return StructBrace { "StmtFor", {
+      trans(stmt.pat),
+      trans(stmt.iterable),
+      trans(stmt.stmts),
+    } };
+  }
   , [](const StmtClass &stmt) {
     return StructBrace { "StmtClass", {
       trans(stmt.name),

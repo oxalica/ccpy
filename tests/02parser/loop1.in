@@ -1,0 +1,6 @@
+for x in xs:
+  for a, b in (1, 2), (3, 4):
+    pass
+
+while 1 + 2:
+  3 + 4

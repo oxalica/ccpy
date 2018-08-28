@@ -285,6 +285,12 @@ struct Parser::Impl {
         this->is.get();
         return this->get_stmt_after_if(); // Already eat newline
 
+      case Keyword::While:
+        return this->get_stmt_ahead_while(); // Newline eaten
+
+      case Keyword::For:
+        return this->get_stmt_ahead_for(); // Newline eaten
+
       case Keyword::Class:
         this->is.get();
         return this->get_stmt_after_class(); // Already eat newline
@@ -329,6 +335,26 @@ struct Parser::Impl {
     this->expect_symbol("Expect `:` after class signature", Symbol::Colon);
     auto body = this->get_stmt_or_suite();
     return StmtClass { move(name), move(base), move(body) };
+  }
+
+  Stmt get_stmt_ahead_for() {
+    this->is.get();
+    auto pat = this->get_pat();
+    this->expect_keyword("Expect `in` after `for` pattern", Keyword::In);
+    auto iterable = this->get_expr_list_maybe_tuple();
+    if(!iterable)
+      throw StreamFailException { "Expect iterable for `for`" };
+    this->expect_symbol("Expect `:` after `for` signature", Symbol::Colon);
+    auto stmts = this->get_stmt_or_suite();
+    return StmtFor { move(pat), move(*iterable), move(stmts) };
+  }
+
+  Stmt get_stmt_ahead_while() {
+    this->is.get();
+    auto cond = this->get_expr();
+    this->expect_symbol("Expect `:` after `while` condition", Symbol::Colon);
+    auto stmts = this->get_stmt_or_suite();
+    return StmtWhile { move(cond), move(stmts) };
   }
 
   Stmt get_stmt_after_if() {

@@ -38,6 +38,12 @@ struct FuncArg {
     std::vector<Stmt> body; \
   }) \
   F(StmtIf, { Expr cond; std::vector<Stmt> thens, elses; }) \
+  F(StmtWhile, { Expr cond; std::vector<Stmt> stmts; }) \
+  F(StmtFor, { \
+    Pat pat; \
+    Expr iterable; \
+    std::vector<Stmt> stmts; \
+  }) \
   F(StmtClass, { \
     Str name; \
     Expr base; \

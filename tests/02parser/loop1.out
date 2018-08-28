@@ -1,0 +1,3 @@
+StmtFor { PatName("x"), ExprName("xs"), [StmtFor { PatTuple[PatName("a"), PatName("b")], ExprTuple(ExprTuple(ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2))), ExprTuple(ExprLiteral(LitInteger(3)), ExprLiteral(LitInteger(4)))), [StmtPass] }] }
+StmtWhile { ExprBinary("add", ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2))), [StmtExpr(ExprBinary("add", ExprLiteral(LitInteger(3)), ExprLiteral(LitInteger(4))))] }
+End
