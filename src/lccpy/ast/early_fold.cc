@@ -136,7 +136,7 @@ static Literal fold_binary_lit(BinaryOp op, Literal &&a, Literal &&b) {
         case BinaryOp::Add: a.value += b.value; break;
         case BinaryOp::Sub: a.value -= b.value; break;
         case BinaryOp::Mul: a.value *= b.value; break;
-        case BinaryOp::Div: a.value /= b.value; break;
+        case BinaryOp::FloorDiv: a.value /= b.value; break;
         case BinaryOp::Mod: a.value %= b.value; break;
         default:
           throw EarlyFoldException { "Invalid binary op for LitInteger" };

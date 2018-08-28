@@ -26,7 +26,8 @@ DECL_TAGGED_UNION(Literal, LITERAL_LIST)
 DECL_REFL_ENUM(UnaryOp, UNARY_OP_LIST)
 
 #define BINARY_OP_LIST(F) \
-  F(Add, "add") F(Sub, "sub") F(Mul, "mul") F(Div, "div") F(Mod, "mod") \
+  F(Add, "add") F(Sub, "sub") F(Mul, "mul") \
+  F(FloorDiv, "floordiv") F(Mod, "mod") \
   F(LogAnd, "and") F(LogOr, "or") \
 
 DECL_REFL_ENUM(BinaryOp, BINARY_OP_LIST)

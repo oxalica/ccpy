@@ -7,7 +7,7 @@ StmtExpr(ExprTuple(ExprLiteral(LitInteger(2)), ExprCall(ExprName("f"), [ExprLite
 StmtExpr(ExprTuple(ExprBinary("add", ExprBinary("add", ExprName("a"), ExprLiteral(LitInteger(1))), ExprLiteral(LitInteger(2))), ExprBinary("add", ExprName("a"), ExprBinary("add", ExprLiteral(LitInteger(1)), ExprLiteral(LitInteger(2))))))
 StmtExpr(ExprTuple(ExprBinary("add", ExprBinary("add", ExprName("a"), ExprLiteral(LitInteger(1))), ExprLiteral(LitInteger(2))), ExprBinary("add", ExprName("a"), ExprLiteral(LitInteger(3)))))
 
-StmtExpr(ExprTuple(ExprBinary("add", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2))), ExprBinary("sub", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2))), ExprBinary("mul", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2))), ExprBinary("div", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2))), ExprBinary("mod", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2)))))
+StmtExpr(ExprTuple(ExprBinary("add", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2))), ExprBinary("sub", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2))), ExprBinary("mul", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2))), ExprBinary("floordiv", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2))), ExprBinary("mod", ExprLiteral(LitInteger(10)), ExprLiteral(LitInteger(2)))))
 StmtExpr(ExprTuple(ExprLiteral(LitInteger(12)), ExprLiteral(LitInteger(8)), ExprLiteral(LitInteger(20)), ExprLiteral(LitInteger(5)), ExprLiteral(LitInteger(0))))
 
 StmtExpr(ExprBinary("sub", ExprBinary("add", ExprLiteral(LitInteger(1)), ExprBinary("mul", ExprLiteral(LitInteger(2)), ExprLiteral(LitInteger(3)))), ExprUnary("inv", ExprLiteral(LitInteger(4)))))

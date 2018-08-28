@@ -35,7 +35,7 @@ DECL_REFL_ENUM(Keyword, KEYWORD_LIST)
   F(LBrace, "{") F(RBrace, "}") \
   F(Assign, "=") \
   F(Inv, "~") \
-  F(Add, "+") F(Sub, "-") F(Mul, "*") F(Div, "/") F(Mod, "%") \
+  F(Add, "+") F(Sub, "-") F(Mul, "*") F(FloorDiv, "//") F(Mod, "%") \
   F(Lt, "<") F(Gt, ">") F(Le, "<=") F(Ge, ">=") \
   F(Eq, "==") F(Ne, "!=") \
 

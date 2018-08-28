@@ -589,8 +589,8 @@ struct Parser::Impl {
       BinaryOp op;
       if(is_symbol(tok, Symbol::Mul))
         op = BinaryOp::Mul;
-      else if(is_symbol(tok, Symbol::Div))
-        op = BinaryOp::Div;
+      else if(is_symbol(tok, Symbol::FloorDiv))
+        op = BinaryOp::FloorDiv;
       else if(is_symbol(tok, Symbol::Mod))
         op = BinaryOp::Mod;
       else
