@@ -490,6 +490,26 @@ struct Impl {
       );
   }
 
+  void run(const StmtTry &stmt) {
+    auto value_buf = this->new_local();
+    auto beg_pos = this->cur_pos();
+    *this << HIRPushExcept { value_buf, 0 }; // Placeholder
+    this->run_stmts(stmt.stmts);
+    *this << HIRPopExcept {};
+    auto const_false = this->eval(ImmBool { false });
+    auto mid_pos = this->cur_pos();
+    *this << HIRJF { move(const_false), 0 }; // Placeholder
+    this->name_store(stmt.bind, move(value_buf));
+    this->run_stmts(stmt.except);
+    auto end_pos = this->cur_pos();
+
+    match(this->closure().hirs[beg_pos]
+    , [&](HIRPushExcept &hir) { hir.target = mid_pos + 1; }
+    , [&](auto &) { throw HIRGenException { "PushExcept locate fail" }; }
+    );
+    this->set_jmp_pos(mid_pos, end_pos);
+  }
+
   void load_args(const vector<FuncArg> &args, const optional<Str> &rest_args) {
     if(args.empty()) {
       if(rest_args) {

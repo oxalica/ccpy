@@ -43,6 +43,11 @@ struct FuncArg {
     Expr base; \
     std::vector<Stmt> body; \
   }) \
+  F(StmtTry, { \
+    std::vector<Stmt> stmts; \
+    Str bind; \
+    std::vector<Stmt> except; \
+  }) \
 
 DECL_TAGGED_UNION(Stmt, STMT_LIST)
 

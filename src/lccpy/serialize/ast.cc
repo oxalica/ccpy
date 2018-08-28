@@ -195,6 +195,13 @@ static Structual trans(const Stmt &stmt) {
       trans(stmt.body),
     } };
   }
+  , [](const StmtTry &stmt) {
+    return StructBrace { "StmtTry", {
+      trans(stmt.stmts),
+      trans(stmt.bind),
+      trans(stmt.except),
+    } };
+  }
   );
 }
 

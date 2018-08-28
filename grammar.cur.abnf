@@ -19,6 +19,8 @@ del_stmt = "del" pat
 pass_stmt = "pass"
 flow_stmt = "return" [expr_list]
           / "yield" [expr_list]
+          / "try" ":" suite
+            "except" "Exception" "as" NAME ":" suite
 
 compound_stmt = funcdef / classdef
 funcdef = "def" NAME "(" [argdeflist] ")" ":" suite

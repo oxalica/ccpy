@@ -137,3 +137,24 @@ print(__intrinsic__v_gen_next1(b))
 print(__intrinsic__gen_stopped1(a))
 print(__intrinsic__gen_stopped1(b))
 print(__intrinsic__gen_stopped1(c))
+println()
+
+def h():
+  try:
+    raise "On no"
+  except Exception as e:
+    print("Get", e)
+    raise e
+    println("Not here")
+  println("Fn not return")
+
+try:
+  println("In try")
+  try:
+    println("Nothing happend")
+  except Exception as e:
+    println("Never")
+  h()
+except Exception as e:
+  print("Except", e)
+println()

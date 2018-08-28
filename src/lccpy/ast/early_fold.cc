@@ -70,6 +70,12 @@ static void fold(Stmt &stmt) {
     for(auto &c: stmt.body)
       fold(c);
   }
+  , [](StmtTry &stmt) {
+    for(auto &c: stmt.stmts)
+      fold(c);
+    for(auto &c: stmt.except)
+      fold(c);
+  }
   );
 }
 

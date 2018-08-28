@@ -289,9 +289,36 @@ struct Parser::Impl {
         this->is.get();
         return this->get_stmt_after_class(); // Already eat newline
 
+      case Keyword::Try:
+        return this->get_stmt_ahead_try(); // Newline eaten
+
       default:
         throw StreamFailException { "Unexpected keyword for stmt" };
     }
+  }
+
+  Stmt get_stmt_ahead_try() {
+    this->is.get();
+    this->expect_symbol("Expect `:` after try", Symbol::Colon);
+    auto stmts = this->get_stmt_or_suite();
+
+    this->expect_keyword("Expect `except`", Keyword::Except);
+    this->expect(
+      "Now support catching `Exception` only",
+      false,
+      [](TokName &&tok) { return tok.name == "Exception"; },
+      [](auto &&) { return false; }
+    );
+    this->expect_keyword("Expect `as`", Keyword::As);
+    auto name = this->expect_name("Expect name for binding exception");
+    this->expect_symbol("Expect `:` after except signature", Symbol::Colon);
+    auto excepts = this->get_stmt_or_suite();
+
+    return StmtTry {
+      move(stmts),
+      move(name),
+      move(excepts),
+    };
   }
 
   Stmt get_stmt_after_class() {

@@ -303,9 +303,12 @@ struct HIRRunner::Impl {
   }
 
   void exec(const HIRPopExcept &) {
-    auto info = this->pop_frame();
-    if(!info || !info->is_except)
+    auto &frames = this->frames();
+    if(frames.size() < 2)
+      throw HIRRuntimeException { "No frame for PopExcept" };
+    if(!frames[frames.size() - 2].is_except)
       throw HIRRuntimeException { "Invalid PopExcept" };
+    frames.erase(frames.end() - 2);
   }
 };
 

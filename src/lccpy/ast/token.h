@@ -15,7 +15,7 @@ struct Span {
   F(Pass, "pass") \
   F(Del, "del") \
   F(Def, "def") F(Return, "return") F(Yield, "yield") \
-  F(Try, "try") F(Except, "except") F(Raise, "raise") \
+  F(Try, "try") F(Except, "except") F(Raise, "raise") F(As, "as") \
   F(Global, "global") F(Nonlocal, "nonlocal") \
   F(If, "if") F(Elif, "elif") F(Else, "else") \
   F(Not, "not") F(And, "and") F(Or, "or") \
