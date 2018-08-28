@@ -1,2 +1,2 @@
 #!/bin/bash
-rm -r debug release
+rm -rf debug release

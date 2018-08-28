@@ -26,9 +26,9 @@ foreach(TEST_PATH ${TEST_SOURCES})
   string(REGEX REPLACE "^[^.]*\\." "" TEST_SPEC_SAMPLE ${TEST_NAME_LONG})
 
   if(${TEST_SPEC_SAMPLE} STREQUAL ${TEST_NAME_LONG}) # Replace failed
-    file(GLOB TEST_CASES RELATIVE "${PROJECT_BINARY_DIR}" "tests/${TEST_NAME_SHORT}/*.in")
+    file(GLOB TEST_CASES RELATIVE "${PROJECT_SOURCE_DIR}" "tests/${TEST_NAME_SHORT}/*.in")
   else()
-    set(TEST_CASES "../tests/${TEST_NAME_SHORT}/${TEST_SPEC_SAMPLE}.in")
+    set(TEST_CASES "tests/${TEST_NAME_SHORT}/${TEST_SPEC_SAMPLE}.in")
   endif()
 
   set(TEST_LIST "${TEST_LIST}${TEST_NAME_LONG}\n")
@@ -43,5 +43,5 @@ endforeach()
 
 file(WRITE "${PROJECT_BINARY_DIR}/test_list.txt" ${TEST_LIST})
 
-add_executable(test_runner src/test.cc)
+add_executable(test_runner src/test_runner.cc)
 # target_link_libraries(test_runner lccpy)

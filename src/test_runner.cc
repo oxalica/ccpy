@@ -8,8 +8,7 @@
 #include <vector>
 using namespace std;
 
-const char TEST_LIST_PATH[] = "test_list.txt";
-const char TMP_PATH[] = "tmp.out";
+string BINARY_PATH, TMP_FILE;
 
 struct Test {
   string name;
@@ -28,7 +27,7 @@ string get_bare_filename(const string &path) {
 }
 
 vector<Test> load_tests() {
-  ifstream fin(TEST_LIST_PATH);
+  ifstream fin(BINARY_PATH + "test_list.txt");
   vector<Test> ret {};
   string buf;
   while(getline(fin, buf), !buf.empty()) {
@@ -59,22 +58,18 @@ void file_copy(const string &source, const string &dest) {
 
 bool run_one(const string &name, const string &in_path, const string &std_path) {
   string cmd {
-#ifdef _WIN32
-    "test_" + name
-#else
-    "./test_" + name
-#endif
-    + " <" + in_path
-    + " >" + TMP_PATH
+    BINARY_PATH + "test_" + name +
+    " <\"" + in_path + "\"" +
+    " >\"" + TMP_FILE + "\""
   };
   int ret = system(cmd.c_str());
   if(ret != 0) {
     cerr << "Exit with [" << ret << "]" << flush;
     return false;
   }
-  if(!file_eq(TMP_PATH, std_path)) {
+  if(!file_eq(TMP_FILE, std_path)) {
     cerr << "Different" << flush;
-    file_copy(TMP_PATH, std_path);
+    file_copy(TMP_FILE, std_path);
     return false;
   }
   return true;
@@ -106,13 +101,29 @@ bool run(const vector<Test> &tests) {
 }
 
 int main(int argc, char *argv[]) {
+  if(argc < 3) {
+    cerr << "HELP: test_runner <BINARY_PATH> <TMP_FILE> [TEST_NAME ...]\n\n";
+    return 1;
+  }
+
+  ::TMP_FILE = argv[2];
+  ::BINARY_PATH = argv[1];
+#ifdef _WIN32
+  if(::BINARY_PATH.empty() ||
+    (::BINARY_PATH.back() != '/' && ::BINARY_PATH.back() != '\\'))
+    ::BINARY_PATH.push_back('\\');
+#else
+  if(::BINARY_PATH.empty() || ::BINARY_PATH.back() != '/')
+    ::BINARY_PATH.push_back('\\');
+#endif
+
   auto all_tests = load_tests();
   vector<Test> run_tests {};
 
-  if(argc == 1) // No args
+  if(argc == 3) // No args
     run_tests = all_tests;
   else {
-    for(int i = 1; i < argc; ++i) { // Skip the first
+    for(int i = 3; i < argc; ++i) {
       string name { argv[i] };
       auto it = find_if(begin(all_tests), end(all_tests), [&](auto &c) {
         return c.name == name;
