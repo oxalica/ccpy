@@ -493,6 +493,7 @@ struct Impl {
   void run(const StmtWhile &stmt) {
     auto beg_pos = this->cur_pos();
     auto cond = this->eval(stmt.cond);
+    cond = this->eval_not(this->eval_not(move(cond)));
     auto mid_pos = this->cur_pos();
     *this << HIRJF { move(cond), 0 }; // Placeholder
     this->run_stmts(stmt.stmts);
@@ -509,7 +510,7 @@ struct Impl {
 
     auto beg_pos = this->cur_pos();
     *this << HIRPushExcept { 0, 0 }; // Placeholder
-    auto val = this->eval_builtin_call("next", SEQ1(move(it)));
+    auto val = this->eval_builtin_call("next", SEQ1(Local { it.id }));
     this->pat_store(stmt.pat, move(val));
     this->run_stmts(stmt.stmts);
     *this << HIRJF { this->eval(ImmBool { false }), beg_pos + 1 };
@@ -618,6 +619,7 @@ struct Impl {
 
   void local_preresolve(const Stmt &stmt) {
     match(stmt
+    , [&](const StmtPass &) {}
     , [&](const StmtGlobal &stmt) {
       for(auto &name: stmt.names)
         this->scope().mark_global(name);
@@ -626,17 +628,47 @@ struct Impl {
       for(auto &name: stmt.names)
         this->scope().mark_nonlocal(name);
     }
+    , [&](const StmtExpr &) {}
     , [&](const StmtAssign &stmt) {
       for(auto &p: stmt.pats)
         this->local_preresolve(p);
     }
+    , [&](const StmtReturn &) {}
+    , [&](const StmtYield &) {}
+    , [&](const StmtRaise &) {}
     , [&](const StmtDel &stmt) {
       this->local_preresolve(stmt.pat);
     }
     , [&](const StmtDef &stmt) {
       this->scope().mark_local(stmt.name);
     }
-    , [&](const auto &) {}
+    , [&](const StmtIf &stmt) {
+      for(auto &c: stmt.thens)
+        this->local_preresolve(c);
+      for(auto &c: stmt.elses)
+        this->local_preresolve(c);
+    }
+    , [&](const StmtWhile &stmt) {
+      for(auto &c: stmt.stmts)
+        this->local_preresolve(c);
+    }
+    , [&](const StmtFor &stmt) {
+      this->local_preresolve(stmt.pat);
+      for(auto &c: stmt.stmts)
+        this->local_preresolve(c);
+    }
+    , [&](const StmtClass &stmt) {
+      this->scope().mark_local(stmt.name);
+      for(auto &c: stmt.body)
+        this->local_preresolve(c);
+    }
+    , [&](const StmtTry &stmt) {
+      for(auto &c: stmt.stmts)
+        this->local_preresolve(c);
+      this->scope().mark_local(stmt.bind);
+      for(auto &c: stmt.except)
+        this->local_preresolve(c);
+    }
     );
   }
 
@@ -649,7 +681,8 @@ struct Impl {
       for(auto &p: pat.pats)
         this->local_preresolve(p);
     }
-    , [&](const auto &) {}
+    , [&](const PatAttr &) {}
+    , [&](const PatIndex &) {}
     );
   }
 

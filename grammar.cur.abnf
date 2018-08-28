@@ -21,6 +21,8 @@ flow_stmt = "return" [expr_list]
           / "yield" [expr_list]
           / "try" ":" suite
             "except" "Exception" "as" NAME ":" suite
+          / "while" expr ":" suite
+          / "for" pat_list "in" expr_list ":" suite
 
 compound_stmt = funcdef / classdef
 funcdef = "def" NAME "(" [argdeflist] ")" ":" suite
