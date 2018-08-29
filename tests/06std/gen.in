@@ -1,0 +1,15 @@
+def gen(n):
+    for x in range(n):
+        yield x * 10
+    for x in range(n, n * 2):
+        yield -x
+
+g = gen(5)
+# print(g)
+print(next(g))
+print(next(g))
+try:
+    print(list(g))
+except Exception as e:
+    print(e)
+

@@ -1,0 +1,16 @@
+def puzzle():
+    def yin(yin):
+        yield '@'
+        def yang(yang):
+            yield '*'
+            for x in yin(yang):
+                yield x
+        for x in yang(yang):
+            yield x
+    for x in yin(yin):
+        yield x
+
+g = puzzle()
+for _ in range(32):
+    raw_print(next(g))
+print()

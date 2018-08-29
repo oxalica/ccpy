@@ -1,0 +1,11 @@
+def f(x=0):
+    def g():
+        nonlocal x
+        x = x + 1
+        return x
+    return g
+
+a, b, c = f(), f(), f(10)
+print(a(), a(), a())
+print(b(), b())
+print(c(), c())

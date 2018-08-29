@@ -1,0 +1,38 @@
+def main():
+  print('Hello', 'world')
+  print('1 + 1 =', 1 + 1)
+  print()
+
+  try:
+    a = Animal('Unknow')
+    b = Cat('Kitty')
+    c = Dog('Mike')
+    b.hug()
+    c.hug()
+    a.hug()
+    print('Unreachable')
+  except Exception as e:
+    print('ERR', repr(e))
+
+class Animal(object):
+  def __init__(self, name):
+    self.name = name
+
+  def hug(self):
+    raise NotImplementedError('Cannot hug an abstract Animal')
+
+class Cat(Animal):
+  def __init__(self, name):
+    Animal.__init__(self, 'Cat ' + name)
+
+  def hug(self):
+    print(self.name, ': Meow')
+
+class Dog(Animal):
+  def __init__(self, name):
+    Animal.__init__(self, 'Dog ' + name)
+
+  def hug(self):
+    print(self.name, ': Wow')
+
+main()
