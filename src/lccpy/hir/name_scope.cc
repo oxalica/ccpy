@@ -1,7 +1,7 @@
 #include "./name_scope.h"
 #include <algorithm>
 #include <vector>
-#include <unordered_map>
+#include <map>
 #include "../util/adt.h"
 using namespace std;
 
@@ -9,7 +9,9 @@ namespace ccpy::hir {
 
 struct NameScope::Impl {
   optional<shared_ptr<NameScope>> parent;
-  unordered_map<Str, NameKind> names;
+  // Generated codes of `StmtClass` depends on the order of local names.
+  // We need to use ordered map to make HIR generation deterministic.
+  map<Str, NameKind> names;
   vector<Str> captured;
   vector<bool> local_alloc;
 
