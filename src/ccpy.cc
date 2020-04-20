@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <string>
 #include <vector>
+#include <lccpy/ast/early_fold.h>
 #include <lccpy/hir/gen.h>
 #include <lccpy/parse/tokenizer.h>
 #include <lccpy/parse/parser.h>
@@ -42,7 +43,7 @@ Module compile(std::istream &is) {
     auto buf_tok = Buffered { tok };
     auto parser = Parser { buf_tok };
     while(auto stmt = parser.get())
-      stmts.push_back(move(*stmt));
+      stmts.push_back(ast::EarlyFold {}(move(*stmt)));
     return HIRGen {}(stmts);
 
   } catch(const StreamFailException &e) {
