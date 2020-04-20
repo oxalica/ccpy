@@ -24,16 +24,16 @@ int main() {
     while(auto stmt = parser.get())
       stmts.push_back(move(*stmt));
 
-  } catch(StreamFailException e) {
+  } catch(const StreamFailException &e) {
     oconsole << "Parse fail: " << e.what() << "\n";
-  } catch(StreamFatalException e) {
+  } catch(const StreamFatalException &e) {
     oconsole << "Parse fatal: " << e.what() << "\n";
   }
 
   try {
     auto mod = HIRGen {}(stmts);
     oconsole << HIRSerializer {}(mod);
-  } catch(HIRGenException e) {
+  } catch(const HIRGenException &e) {
     oconsole << "Gen fail: " << e.what() << "\n";
   }
   return 0;

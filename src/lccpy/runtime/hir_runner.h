@@ -28,7 +28,7 @@ public:
   HIRRuntimeException(const char *_reason) noexcept: reason(_reason) {}
   virtual ~HIRRuntimeException() noexcept {}
 
-  const char *what() noexcept { return this->reason; }
+  const char *what() const noexcept { return this->reason; }
 
 private:
   const char *reason;

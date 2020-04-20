@@ -19,9 +19,9 @@ int main() {
     while(auto c = tok.get())
       oconsole << structual_ser(token_ser(*c)) << "\n";
     oconsole << "End\n";
-  } catch(StreamFailException e) {
+  } catch(const StreamFailException &e) {
     oconsole << "Fail: " << e.what() << "\n";
-  } catch(StreamFatalException e) {
+  } catch(const StreamFatalException &e) {
     oconsole << "Fatal: " << e.what() << "\n";
   }
   return 0;

@@ -26,9 +26,9 @@ int main() {
     while(auto stmt = parser.get())
       stmts.push_back(move(*stmt));
 
-  } catch(StreamFailException e) {
+  } catch(const StreamFailException &e) {
     cout << "Parse fail: " << e.what() << "\n";
-  } catch(StreamFatalException e) {
+  } catch(const StreamFatalException &e) {
     cout << "Parse fatal: " << e.what() << "\n";
   }
 
@@ -37,7 +37,7 @@ int main() {
   try {
     mod = HIRGen {}(stmts);
     cout << HIRSerializer {}(mod);
-  } catch(HIRGenException e) {
+  } catch(const HIRGenException &e) {
     cout << "Gen fail: " << e.what() << "\n";
   }
 
@@ -45,9 +45,9 @@ int main() {
     HIRRunner runner { cin, cout };
     auto id = runner.load(move(mod));
     runner.run(id);
-  } catch(HIRRuntimeException e) {
+  } catch(const HIRRuntimeException &e) {
     cout << "HIR runtime error: " << e.what() << "\n";
-  } catch(IntrinsicException e) {
+  } catch(const IntrinsicException &e) {
     cout << "Intrinsic error: " << e.what() << "\n";
   }
 

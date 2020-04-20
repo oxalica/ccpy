@@ -87,7 +87,7 @@ public:
   IntrinsicException(const char *_reason) noexcept: reason(_reason) {}
   virtual ~IntrinsicException() noexcept {}
 
-  const char *what() noexcept { return this->reason; }
+  const char *what() const noexcept { return this->reason; }
 
 private:
   const char *reason;

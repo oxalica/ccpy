@@ -30,11 +30,11 @@ int main() {
       oconsole << ser_ast(ast_folded) << "\n\n";
     }
     oconsole << "End\n";
-  } catch(StreamFailException e) {
+  } catch(const StreamFailException &e) {
     oconsole << "Fail: " << e.what() << "\n";
-  } catch(StreamFatalException e) {
+  } catch(const StreamFatalException &e) {
     oconsole << "Fatal: " << e.what() << "\n";
-  } catch(EarlyFoldException e) {
+  } catch(const EarlyFoldException &e) {
     oconsole << "Fold error: " << e.what() << "\n";
   }
   return 0;

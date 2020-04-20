@@ -25,7 +25,7 @@ public:
   HIRGenException(const char *_reason) noexcept: reason(_reason) {}
   virtual ~HIRGenException() noexcept {}
 
-  const char *what() noexcept { return this->reason; }
+  const char *what() const noexcept override { return this->reason; }
 
 private:
   const char *reason;

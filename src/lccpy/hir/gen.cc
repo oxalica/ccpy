@@ -237,7 +237,7 @@ struct Impl {
       [&]() { this->store(Local { ret.id }, f_true()); },
       [&]() { this->store(Local { ret.id }, f_false()); }
     );
-    return move(ret);
+    return ret;
   }
 
   template<typename T, typename F>
@@ -872,7 +872,7 @@ Module HIRGen::operator()(const vector<Stmt> &stmts) const {
     if(t.mod.closures[0].is_generator)
       throw HIRGenException { "Cannot `yield` in global space" };
     return move(t.mod);
-  } catch(NameResolveException e) {
+  } catch(const NameResolveException &e) {
     throw HIRGenException { e.what() }; // Trans & rethrow
   }
 }

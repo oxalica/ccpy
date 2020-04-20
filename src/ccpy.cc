@@ -45,13 +45,13 @@ Module compile(std::istream &is) {
       stmts.push_back(move(*stmt));
     return HIRGen {}(stmts);
 
-  } catch(StreamFailException e) {
+  } catch(const StreamFailException &e) {
     throw InterpretException { string("Parse fail: ") + e.what() };
 
-  } catch(StreamFatalException e) {
+  } catch(const StreamFatalException &e) {
     throw InterpretException { string("Parse fatal: ") + e.what() };
 
-  } catch(HIRGenException e) {
+  } catch(const HIRGenException &e) {
     throw InterpretException { string("Generate HIR fail: ") + e.what() };
   }
 }
@@ -75,16 +75,16 @@ void run_sources(
       fin.close();
       auto idx = runner.load(move(mod));
       idxs.push_back(idx);
-    } catch(InterpretException e) {
+    } catch(const InterpretException &e) {
       throw InterpretException { path + ": " + e.what() };
     }
 
   try {
     for(auto idx: idxs)
       runner.run(idx);
-  } catch(HIRRuntimeException e) {
+  } catch(const HIRRuntimeException &e) {
     throw InterpretException { string("HIR runtime error: ") + e.what() };
-  } catch(IntrinsicException e) {
+  } catch(const IntrinsicException &e) {
     throw InterpretException { string("Intrinsic error: ") + e.what() };
   }
 }
@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
   try {
     run_sources(sources, cin, cout);
     return EXIT_SUCCESS;
-  } catch(InterpretException e) {
+  } catch(const InterpretException &e) {
     cerr << "[ERR] " << e.what() << "\n"
          << endl;
     return EXIT_FAILURE;

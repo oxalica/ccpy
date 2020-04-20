@@ -472,7 +472,7 @@ struct Parser::Impl {
   Expr get_expr_cond() {
     Expr c = this->get_expr_logic1();
     if(!is_keyword(this->is.peek(), Keyword::If))
-      return move(c);
+      return c;
     this->is.get();
 
     auto cond = this->get_expr_logic1(); // No recur in `cond`
@@ -484,7 +484,7 @@ struct Parser::Impl {
   Expr get_expr_logic1() {
     Expr c = this->get_expr_logic2();
     if(!is_keyword(this->is.peek(), Keyword::Or))
-      return move(c);
+      return c;
     this->is.get();
 
     return ExprBinary {

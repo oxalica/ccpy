@@ -28,11 +28,11 @@ std::optional<Module> compile(std::istream &is) {
       stmts.push_back(move(*stmt));
 
     return HIRGen {}(stmts);
-  } catch(StreamFailException e) {
+  } catch(const StreamFailException &e) {
     cout << "Parse fail: " << e.what() << "\n";
-  } catch(StreamFatalException e) {
+  } catch(const StreamFatalException &e) {
     cout << "Parse fatal: " << e.what() << "\n";
-  } catch(HIRGenException e) {
+  } catch(const HIRGenException &e) {
     cout << "Gen fail: " << e.what() << "\n";
   }
   return {};
@@ -63,9 +63,9 @@ int main() {
     cout << "Std done\n\n";
     runner.run(id_main);
     cout << "Done\n";
-  } catch(HIRRuntimeException e) {
+  } catch(const HIRRuntimeException &e) {
     cout << "HIR runtime error: " << e.what() << "\n";
-  } catch(IntrinsicException e) {
+  } catch(const IntrinsicException &e) {
     cout << "Intrinsic error: " << e.what() << "\n";
   }
   return 0;
